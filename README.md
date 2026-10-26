@@ -33,12 +33,12 @@ los datos viejos de `puntos/` y `originales/` **no se usan**.
 
 | Fase | Qué se hace | Quién |
 |---|---|---|
-| 1 | Marcar los materiales en las 4 imágenes y extraer sus firmas | **Samuel Cogollo** |
+| 1 | Marcar los materiales en las 4 imágenes con ImageJ y exportar las zonas en CSV | **Samuel Cogollo** |
 | 2 | Revisar las muestras y calcular la firma promedio de cada material | Nosotros |
 | 3 | Un notebook por imagen con la longitud de arco de cada material y sus métricas | Nosotros |
 | 4 | Mapa final de cada imagen con todos los materiales pintados | Nosotros |
 
-### Tarea de Samuel Cogollo: marcar materiales y extraer sus firmas
+### Tarea de Samuel Cogollo: marcar materiales en ImageJ
 
 #### ¿Qué es una firma y por qué importa marcar bien?
 
@@ -46,15 +46,16 @@ Una foto normal guarda 3 colores por píxel (rojo, verde, azul). Estas imágenes
 por píxel. Si graficas esos 380 valores obtienes una curva, la **firma espectral**, y cada material
 tiene una forma de curva propia: el agua, un techo de zinc y un árbol se ven distintos.
 
-El método toma tus muestras, saca la firma "típica" de cada material y busca en toda la imagen
+Tú marcas **dónde** está cada material y nosotros sacamos la firma de esas zonas desde la imagen de 380 bandas.
+El método toma esas muestras, saca la firma "típica" de cada material y busca en toda la imagen
 los píxeles que se le parecen. **Si en una muestra se cuela un solo píxel de otra cosa** (una sombra,
 un borde, un carro), el método se vuelve permisivo y termina marcando casi toda la imagen.
 Por eso lo más importante de tu tarea es que **las muestras estén limpias**.
 
 #### Las imágenes
 
-Son 4 imágenes de Cartagena de 750×750 píxeles. Los `.img` (los que tienen las 380 bandas) se bajan
-del Drive del curso y van en `datos/cartagenaN/imagen/`. Aquí está cómo se ven:
+Son 4 imágenes de Cartagena de 750×750 píxeles. Para marcar usas el `.png` de cada una, que ya está en el repo
+(`datos/cartagenaN/imagen/cartagenaN.png`); no necesitas bajar los `.img`. Aquí está cómo se ven:
 
 | cartagena1 | cartagena2 |
 |---|---|
@@ -86,23 +87,38 @@ del Drive del curso y van en `datos/cartagenaN/imagen/`. Aquí está cómo se ve
 La tabla es lo que **creemos** que hay mirando las fotos. Confírmalo tú al revisar cada imagen:
 si encuentras un material que no está en la tabla, márcalo también, y si algo de la tabla no aparece, no pasa nada.
 
-#### Con qué programa
+#### Cómo marcar con ImageJ
 
-**Manuel te indica qué programa usar.** Si el programa lo permite, abre el `.hdr`/`.img` (la imagen con
-las 380 bandas) y no solo el `.png`, para que puedas ver la firma de los píxeles que marcas.
+Usa **ImageJ** (gratis y open source): <https://imagej.net/ij/download.html> (también sirve Fiji).
+
+**Una sola vez, al abrir ImageJ:**
+1. `Analyze > Set Measurements...` → deja marcado **solo** `Bounding rectangle` → `OK`.
+2. `Analyze > Set Scale...` → si dice algo distinto de `pixels`, presiona `Click to Remove Scale` → `OK`.
+   Así las coordenadas salen en píxeles.
+
+**Por cada material de cada imagen:**
+1. `File > Open...` → abre `datos/cartagenaN/imagen/cartagenaN.png`.
+   Puedes acercar con la lupa o con las teclas `+` y `-`.
+   La cartagena2 se ve oscura: `Image > Adjust > Brightness/Contrast... > Auto` la aclara (no guardes la imagen).
+2. Escoge la herramienta de **rectángulo** (la primera de la barra). Usa solo rectángulos.
+3. Dibuja un rectángulo **dentro** del material y presiona `Ctrl+M` (`Analyze > Measure`).
+   Se agrega una fila a la ventana **Results**.
+4. Repite el paso 3 con todas las zonas de ese material en esa imagen.
+5. En la ventana **Results**: `File > Save As...` → guárdalo como
+   `datos/cartagenaN/muestras/<material>.csv` (ver nombres abajo).
+6. Antes de pasar al siguiente material, limpia la tabla: en la ventana **Results**, `Results > Clear Results`.
 
 #### Cómo marcar bien
 
 - Marca solo zonas donde estés **seguro** de qué material es. Si dudas, no la marques.
-- Toma el **centro** del objeto: nada de bordes, sombras, carros, personas ni mezcla con otro material.
+- El rectángulo va en el **centro** del objeto: nada de bordes, sombras, carros, personas ni mezcla con otro material.
+  Es mejor un rectángulo pequeño y limpio que uno grande que se salga.
 - Marca **varias zonas** de cada material en cada imagen, repartidas por la imagen (no todas juntas):
   como mínimo unas **3 zonas** o unos **200 píxeles** por material.
-- Si el programa te muestra la firma, revisa que las curvas de una misma muestra se parezcan entre sí.
-  Si una se sale mucho de las demás, quita ese píxel o esa zona.
 
 #### Qué entregar y dónde
 
-Un archivo CSV **por material y por imagen** en `datos/cartagenaN/muestras/<material>.csv`. Por ejemplo:
+El CSV que guarda ImageJ, **uno por material y por imagen**, en `datos/cartagenaN/muestras/<material>.csv`. Por ejemplo:
 
 ```
 datos/cartagena1/muestras/techo_lamina.csv
@@ -112,13 +128,10 @@ datos/cartagena3/muestras/tierra.csv
 
 - Nombres en minúscula y sin espacios ni tildes: `techo_lamina`, `asbesto`, `techo_teja`, `techo_concreto`,
   `vegetacion`, `tierra`, `asfalto`, `contenedor`...
-- Sirve cualquiera de estos 2 formatos (nosotros lo adaptamos):
-  - **Un píxel por fila:** columnas `x,y`.
-  - **Un recuadro por fila:** columnas `x1,y1,x2,y2,nombre` (esquina de arriba a la izquierda y esquina de abajo a la derecha).
-- Las coordenadas van en **píxeles** de la imagen de 750×750: `x` es la columna, `y` es la fila, y el (0, 0) es la
-  esquina de **arriba a la izquierda**.
-- Si el programa exporta también la firma (los valores de las bandas de cada píxel), inclúyela en el mismo CSV o en otro
-  con el mismo nombre terminado en `_firma.csv`.
+- El CSV debe tener las columnas `BX, BY, Width, Height` (una fila por rectángulo). Si no salen, revisa el paso de
+  `Set Measurements`. `BX, BY` es la esquina de arriba a la izquierda del rectángulo, en píxeles.
+- Si te equivocaste en una zona, bórrala de la tabla (clic en la fila → `Edit > Clear`) antes de guardar,
+  o borra esa fila del CSV.
 - No modifiques ni borres nada de `recuadros/`, `puntos/` ni `originales/`.
 
 #### Cómo subirlo
@@ -141,7 +154,7 @@ Luego avisa a Manuel. Puedes subir por partes (por ejemplo, una imagen a la vez)
 - [ ] Cada material tiene al menos ~3 zonas o ~200 píxeles por imagen.
 - [ ] Ninguna muestra toca bordes, sombras ni otro material.
 - [ ] Los archivos están en `datos/cartagenaN/muestras/` con nombres sin espacios.
-- [ ] Las coordenadas son en píxeles (x = columna, y = fila, origen arriba a la izquierda).
+- [ ] Cada CSV tiene las columnas `BX, BY, Width, Height` y la escala estaba en píxeles.
 - [ ] Subí todo a la rama `muestras-samuel` y avisé.
 
 ## Preparar el entorno (una sola vez)
