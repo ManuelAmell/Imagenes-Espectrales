@@ -1,0 +1,9 @@
+ENVI
+samples = 750
+lines = 750
+bands = 380
+header offset = 0
+file type = ENVI Standard
+data type = 4
+interleave = bil
+byte order = 0
