@@ -75,16 +75,16 @@ Son 4 imágenes de Cartagena de 750×750 píxeles. Para marcar usas el `.png` de
 |---|---|---|---|---|
 | Agua salada (mar) | — | ✅ | — | ✅ |
 | Agua dulce (río, laguna) | — | — | ✅ | — |
-| Techos de lámina (zinc, metal) | ❌ | ❓ | ❌ | ❌ |
+| Techos de lámina (zinc, metal) | ✅ | ❓ | ❌ | ❌ |
 | Asbesto (techos de asbesto-cemento / eternit) | ❓ | ❓ | ❓ | ❓ |
-| Techos de teja (barro, rojizos) | ❌ | — | ❓ | ❓ |
-| Techos de concreto / blancos | ❌ | ❓ | ❌ | ❌ |
-| Vegetación (árboles, manglar, pasto) | ❌ | — | ❌ | ❌ |
+| Techos de teja (barro, rojizos) | ✅ | — | ❓ | ❓ |
+| Techos de concreto / blancos | ✅ | ❓ | ❌ | ✅ |
+| Vegetación (árboles, manglar, pasto) | ✅ | — | ✅ | ✅ |
 | Tierra / suelo desnudo | ❓ | — | ❌ | ❌ |
-| Carretera / asfalto | ❌ | ❌ | ❌ | ❌ |
+| Carretera / asfalto | ✅ | ✅ | ✅ | ✅ |
 | Contenedores | ❌ | ❌ | — | ❌ |
-| **Otros** (lo que no es ninguno de los de arriba, ver abajo) | ❌ | ❌ | ❌ | ❌ |
 
+Los ✅ de los materiales nuevos son las muestras que ya entregó Samuel (rama `DatosCSV`).
 La tabla es lo que **creemos** que hay mirando las fotos. Confírmalo tú al revisar cada imagen:
 si encuentras un material que no está en la tabla, márcalo también, y si algo de la tabla no aparece, no pasa nada.
 
@@ -117,16 +117,14 @@ Usa **ImageJ** (gratis y open source): <https://imagej.net/ij/download.html> (ta
 - Marca **varias zonas** de cada material en cada imagen, repartidas por la imagen (no todas juntas):
   como mínimo unas **3 zonas** o unos **200 píxeles** por material.
 
-#### El archivo `otros`
+#### No hace falta marcar `otros`
 
-Para medir si el método funciona, cada material se compara contra zonas que seguro **no** son ese material.
-Por eso, en **cada imagen**, marca también un `otros.csv` (igual que un material más) con zonas que
-**no sean ninguno** de los materiales que marcaste en esa imagen: sombras, carros, barcos, piscinas, tanques,
-canchas, muelles... Lo que haya y no tenga su propio archivo.
+Para medir si el método funciona, cada material se compara contra **los demás materiales que marcaste en esa
+misma imagen**. Por eso:
 
-- Que sean zonas variadas (varias cosas distintas), no todas iguales.
-- Nunca pongas en `otros` algo que también marcaste como material. Por ejemplo, si marcaste `vegetacion`,
-  ningún árbol puede ir en `otros`.
+- Cada imagen necesita **al menos 2 materiales** (cartagena2 por ahora solo tiene asfalto).
+- Entre más materiales marques en una imagen, mejor: lo que no se marca, el método lo confunde con el
+  material más parecido.
 
 #### Qué entregar y dónde
 
@@ -136,27 +134,30 @@ El CSV que guarda ImageJ, **uno por material y por imagen**, en `datos/cartagena
 datos/cartagena1/muestras/techo_lamina.csv
 datos/cartagena1/muestras/vegetacion.csv
 datos/cartagena3/muestras/tierra.csv
-datos/cartagena3/muestras/otros.csv
 ```
 
 - Nombres en minúscula y sin espacios ni tildes: `techo_lamina`, `asbesto`, `techo_teja`, `techo_concreto`,
-  `vegetacion`, `tierra`, `asfalto`, `contenedor`... y `otros`.
-- El CSV debe tener las columnas `BX, BY, Width, Height` (una fila por rectángulo). Si no salen, revisa el paso de
-  `Set Measurements`. `BX, BY` es la esquina de arriba a la izquierda del rectángulo, en píxeles.
+  `vegetacion`, `tierra`, `asfalto`, `contenedor`...
+- Sirven 2 formatos:
+  - **Un píxel por fila**, con columnas `x,y` (así entregó Samuel la primera parte).
+  - **Un rectángulo por fila**, con columnas `BX, BY, Width, Height` (el `Results` de los pasos de arriba).
+    `BX, BY` es la esquina de arriba a la izquierda del rectángulo, en píxeles.
+- Solo en `muestras/`: no copies los CSV en otras carpetas (por ejemplo `imagen/`).
 - Si te equivocaste en una zona, bórrala de la tabla (clic en la fila → `Edit > Clear`) antes de guardar,
   o borra esa fila del CSV.
 - No modifiques ni borres nada de `recuadros/`, `puntos/` ni `originales/`.
 
 #### Cómo subirlo
 
+Samuel trabaja en su rama `DatosCSV`. Antes de seguir marcando, trae lo último de `master`:
+
 ```bash
-git clone git@github.com:ManuelAmell/Imagenes-Espectrales.git
-cd Imagenes-Espectrales
-git checkout -b muestras-samuel
+git checkout DatosCSV
+git pull origin master
 # ... marcas y guardas los CSV en datos/cartagenaN/muestras/ ...
 git add datos/*/muestras
 git commit -m "feat: muestras de materiales de cartagenaN"
-git push -u origin muestras-samuel
+git push
 ```
 
 Luego avisa a Manuel. Puedes subir por partes (por ejemplo, una imagen a la vez).
@@ -166,10 +167,10 @@ Luego avisa a Manuel. Puedes subir por partes (por ejemplo, una imagen a la vez)
 - [ ] Revisé las 4 imágenes y marqué todos los materiales que encontré (los ❌ y los ❓ que sí aparecen).
 - [ ] Cada material tiene al menos ~3 zonas o ~200 píxeles por imagen.
 - [ ] Ninguna muestra toca bordes, sombras ni otro material.
-- [ ] Cada imagen tiene su `otros.csv`, sin nada de los materiales que marqué en ella.
-- [ ] Los archivos están en `datos/cartagenaN/muestras/` con nombres sin espacios.
-- [ ] Cada CSV tiene las columnas `BX, BY, Width, Height` y la escala estaba en píxeles.
-- [ ] Subí todo a la rama `muestras-samuel` y avisé.
+- [ ] Cada imagen tiene al menos 2 materiales.
+- [ ] Los archivos están solo en `datos/cartagenaN/muestras/`, con nombres sin espacios.
+- [ ] Cada CSV tiene las columnas `x,y` o `BX, BY, Width, Height`, en píxeles.
+- [ ] Subí todo a la rama `DatosCSV` y avisé.
 
 ## Preparar el entorno (una sola vez)
 
@@ -217,7 +218,8 @@ cd notebooks && ../.venv/bin/jupyter nbconvert --to notebook --execute --inplace
 El generador toma **cada CSV** de `recuadros/` (menos `otros.csv`) como un material.
 
 Para los materiales de Samuel (los CSV de ImageJ en `muestras/`) se usa `--muestras`. Sale un notebook aparte,
-`cartagena4_materiales.ipynb`, que compara cada material contra `muestras/otros.csv`:
+`cartagena4_materiales.ipynb`, que compara cada material contra los demás materiales de la imagen
+(se necesitan al menos 2):
 
 ```bash
 .venv/bin/python herramientas/generar_notebooks.py --muestras 4

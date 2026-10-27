@@ -6,11 +6,11 @@ Uso (desde la raíz del repo):
 
 Sin opciones: cada datos/cartagena<N>/recuadros/<material>.csv (menos otros.csv) es un material
 y sale notebooks/cartagena<N>.ipynb.
-Con --muestras: cada datos/cartagena<N>/muestras/<material>.csv (el CSV de Results de ImageJ, con
-BX, BY, Width, Height) es un material y sale notebooks/cartagena<N>_materiales.ipynb.
-Los otros materiales salen del otros.csv de la misma carpeta (recuadros/ o muestras/).
-Cada material se compara contra otros.csv usando la longitud de arco, igual que en
-Cuaderno_Asbesto_ArcoV3.ipynb: 2 tramos de bandas, similitud porcentual y umbral = similitud mínima.
+Con --muestras: cada datos/cartagena<N>/muestras/<material>.csv (de ImageJ: un píxel por fila con x,y
+o un rectángulo por fila con BX, BY, Width, Height) es un material y sale notebooks/cartagena<N>_materiales.ipynb.
+Cada material se compara usando la longitud de arco, igual que en Cuaderno_Asbesto_ArcoV3.ipynb
+(2 tramos de bandas, similitud porcentual y umbral = similitud mínima), contra recuadros/otros.csv
+o, con --muestras, contra los demás materiales de la misma imagen.
 """
 import glob
 import os
@@ -47,31 +47,58 @@ def tiene_png(n):
 
 
 def celdas_lectura(materiales, carpeta):
-    """Celdas que leen los recuadros de cada material y los de otros."""
+    """Celdas que leen los recuadros de cada material (y los de otros) y los dibujan."""
     if carpeta == "recuadros":
         lectura = "\n".join(f"""recuadros["{c}"]=pd.read_csv(ruta+"/recuadros/{c}.csv")""" for c, _, _ in materiales)
-        lectura += """\nrecuadros_otros=pd.read_csv(ruta+"/recuadros/otros.csv")"""
-        explicacion = """# Recuadros de muestra
+        return [
+            md("""# Recuadros de muestra
 Los recuadros (x1, y1, x2, y2) se marcan a mano con `herramientas/marcar_recuadros.py` y se guardan en `datos/cartagenaN/recuadros/`.
-Cada material tiene su archivo, y `otros.csv` tiene lo que seguro **no** es ninguno de los materiales."""
-    else:
-        lectura = """def leer_imagej(archivo):
-  #ImageJ guarda la esquina de arriba a la izquierda (BX, BY) y el tamaño (Width, Height) de cada rectángulo
-  m=pd.read_csv(archivo)
-  return pd.DataFrame({"x1":m.BX, "y1":m.BY, "x2":m.BX+m.Width, "y2":m.BY+m.Height}).round().astype(int)
-
-""" + "\n".join(f"""recuadros["{c}"]=leer_imagej(ruta+"/muestras/{c}.csv")""" for c, _, _ in materiales)
-        lectura += """\nrecuadros_otros=leer_imagej(ruta+"/muestras/otros.csv")"""
-        explicacion = """# Muestras de los materiales
-Las zonas de cada material se marcan con rectángulos en ImageJ y se guardan en `datos/cartagenaN/muestras/` (ver el README).
-Las pasamos a recuadros (x1, y1, x2, y2). `muestras/otros.csv` tiene lo que seguro **no** es ninguno de los materiales."""
-    return [
-        md(explicacion),
-        code(f"""recuadros={{}}
+Cada material tiene su archivo, y `otros.csv` tiene lo que seguro **no** es ninguno de los materiales."""),
+            code(f"""recuadros={{}}
 {lectura}
+recuadros_otros=pd.read_csv(ruta+"/recuadros/otros.csv")
 for nombre in recuadros:
   print(nombre, ":", len(recuadros[nombre]), "recuadros")
 print("otros :", len(recuadros_otros), "recuadros")"""),
+            md("Dibujamos los recuadros (cian = materiales, rojo = otros)"),
+            code("""img_copy=imagen.copy()
+for nombre in recuadros:
+  for id,r in recuadros[nombre].iterrows():
+    cv2.rectangle(img_copy, (r.x1,r.y1), (r.x2,r.y2), (0,255,255), 2)
+for id,r in recuadros_otros.iterrows():
+  cv2.rectangle(img_copy, (r.x1,r.y1), (r.x2,r.y2), (255,0,0), 2)
+plt.figure(figsize=(8, 8))
+plt.imshow(img_copy)
+plt.show()"""),
+        ]
+    lectura = "\n".join(f"""recuadros["{c}"]=leer_imagej(ruta+"/muestras/{c}.csv")""" for c, _, _ in materiales)
+    colores = "{" + ", ".join(f'"{c}":{col}' for c, _, col in materiales) + "}"
+    return [
+        md("""# Muestras de los materiales
+Las zonas de cada material se marcan en ImageJ y se guardan en `datos/cartagenaN/muestras/` (ver el README).
+Las pasamos a recuadros (x1, y1, x2, y2). Cada material se compara contra **los demás materiales** de la imagen."""),
+        code(f"""def leer_imagej(archivo):
+  m=pd.read_csv(archivo)
+  if "x" in m.columns:
+    #Un píxel por fila (x, y): cada píxel es un recuadro de 1x1
+    return pd.DataFrame({{"x1":m.x, "y1":m.y, "x2":m.x+1, "y2":m.y+1}}).round().astype(int)
+  #Un rectángulo por fila: ImageJ guarda la esquina de arriba a la izquierda (BX, BY) y el tamaño (Width, Height)
+  return pd.DataFrame({{"x1":m.BX, "y1":m.BY, "x2":m.BX+m.Width, "y2":m.BY+m.Height}}).round().astype(int)
+
+recuadros={{}}
+{lectura}
+for nombre in recuadros:
+  print(nombre, ":", len(recuadros[nombre]), "recuadros")"""),
+        md("Dibujamos las muestras de cada material con su color"),
+        code(f"""colores={colores}
+img_copy=imagen.copy()
+for nombre in recuadros:
+  for id,r in recuadros[nombre].iterrows():
+    cv2.rectangle(img_copy, (r.x1,r.y1), (r.x2-1,r.y2-1), colores[nombre], 2)
+plt.figure(figsize=(8, 8))
+plt.imshow(img_copy)
+plt.legend(handles=[mpatches.Patch(color=np.array(colores[m])/255, label=m.replace("_"," ")) for m in colores], loc="upper right")
+plt.show()"""),
     ]
 
 
@@ -124,16 +151,6 @@ def similitud_porcentual(A, B):
   sims = 100 * (1 - np.abs(A - B) / (np.abs(A) + np.abs(B) + 1e-9))
   return np.mean(sims)"""),
     ] + celdas_lectura(materiales, carpeta) + [
-        md("Dibujamos los recuadros (cian = materiales, rojo = otros)"),
-        code("""img_copy=imagen.copy()
-for nombre in recuadros:
-  for id,r in recuadros[nombre].iterrows():
-    cv2.rectangle(img_copy, (r.x1,r.y1), (r.x2,r.y2), (0,255,255), 2)
-for id,r in recuadros_otros.iterrows():
-  cv2.rectangle(img_copy, (r.x1,r.y1), (r.x2,r.y2), (255,0,0), 2)
-plt.figure(figsize=(8, 8))
-plt.imshow(img_copy)
-plt.show()"""),
         md("Función para sacar los píxeles (con datos) que hay dentro de unos recuadros"),
         code("""def pixeles_de(rec):
   l_pix=[]
@@ -146,13 +163,18 @@ plt.show()"""),
     ]
 
 
-def celdas_material(n, k, clave, nombre, color):
+def celdas_material(n, k, clave, nombre, color, carpeta):
     a, b, c, d = LIMS
+    if carpeta == "recuadros":
+        otros, de_otros = "otros", "pixeles_de(recuadros_otros)"
+    else:
+        otros = "los demás materiales"
+        de_otros = f"""pixeles_de(pd.concat([recuadros[m] for m in recuadros if m!="{clave}"]))"""
     return [
         md(f"# Material {k}: {nombre}"),
-        md(f"Sacamos los píxeles de los recuadros: {nombre} (si) y otros (no). Tomamos 250 de cada uno al azar, como en el original"),
+        md(f"Sacamos los píxeles de los recuadros: {nombre} (si) y {otros} (no). Tomamos 250 de cada uno al azar, como en el original"),
         code(f"""df_si=pixeles_de(recuadros["{clave}"])
-df_no=pixeles_de(recuadros_otros)
+df_no={de_otros}
 print("Píxeles de {nombre}:", len(df_si), " otros:", len(df_no))
 df_si=df_si.sample(n=min(250,len(df_si)),random_state=42)
 df_no=df_no.sample(n=min(250,len(df_no)),random_state=42)
@@ -355,15 +377,18 @@ def generar(n, carpeta="recuadros"):
     if not materiales:
         print(f"cartagena{n}: no hay materiales en datos/cartagena{n}/{carpeta}/, se omite")
         return
-    if not os.path.exists(os.path.join(RAIZ, "datos", f"cartagena{n}", carpeta, "otros.csv")):
-        print(f"cartagena{n}: falta datos/cartagena{n}/{carpeta}/otros.csv, se omite")
+    if carpeta == "recuadros" and not os.path.exists(os.path.join(RAIZ, "datos", f"cartagena{n}", "recuadros", "otros.csv")):
+        print(f"cartagena{n}: falta datos/cartagena{n}/recuadros/otros.csv, se omite")
+        return
+    if carpeta == "muestras" and len(materiales) < 2:
+        print(f"cartagena{n}: hace falta al menos 2 materiales en muestras/ para compararlos entre sí, se omite")
         return
     titulo = " y ".join(nom for _, nom, _ in materiales)
     celdas = [md(f"# Cartagena {n}: {titulo} con longitud de arco")]
     celdas += celdas_inicio(n, materiales, carpeta)
     celdas.append(code("#Aquí se guardan los mapas de similitud y umbrales de cada material\nmapas={}\numbrales={}"))
     for k, (clave, nombre, color) in enumerate(materiales, start=1):
-        celdas += celdas_material(n, k, clave, nombre, color)
+        celdas += celdas_material(n, k, clave, nombre, color, carpeta)
     if len(materiales) > 1:
         celdas += celdas_final(n, materiales, sufijo)
     nb = nbf.v4.new_notebook()
