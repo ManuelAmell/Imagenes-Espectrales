@@ -21,10 +21,36 @@ datos/cartagenaN/
   originales/  archivos de puntos tal como llegaron
 herramientas/
   marcar_recuadros.py   para dibujar recuadros de muestra sobre una imagen
-  generar_notebooks.py  arma notebooks/cartagenaN.ipynb a partir de los recuadros
+  generar_notebooks.py  arma notebooks/cartagenaN.ipynb (agua) y cartagenaN_materiales.ipynb (--muestras)
 notebooks/     un notebook por imagen
 resultados/    imágenes marcadas que salen de los notebooks
+docs/          explicación del método y reporte en PDF, guion del video (ver "Documentos")
 ```
+
+## Documentos
+
+| Archivo | Qué es |
+|---|---|
+| [docs/explicacion_metodo.pdf](docs/explicacion_metodo.pdf) | Cómo reconocemos materiales con la longitud de arco: el paso a paso del notebook, del píxel a la imagen pintada, con figuras de datos reales |
+| [docs/reporte.pdf](docs/reporte.pdf) | Reporte del proyecto: datos, método, las 4 etapas con sus resultados, limitaciones y lo que sigue |
+| [docs/guion_pitch_video.md](docs/guion_pitch_video.md) | Guion de ~1 minuto para presentar el video en voz alta |
+
+Las fuentes están en `docs/fuentes/` (HTML + CSS). Para regenerarlos:
+
+```bash
+.venv/bin/python docs/fuentes/generar_figuras.py   # figuras desde docs/fuentes/datos.json
+bash docs/fuentes/generar_pdfs.sh                   # HTML → PDF con Chromium
+```
+
+## Lo que se ha hecho
+
+| Etapa | Qué se hizo | Resultado |
+|---|---|---|
+| 1. Primera prueba | Método aplicado a todos los materiales con los puntos que llegaron | Solo el agua pasó de 0,7; el resto marcaba de más (techos de c1: 99 % de la imagen) |
+| 2. Muestras a mano | Recuadros de agua marcados donde seguro hay agua (y `otros`) | c4 y la laguna bien; el río (97 %) y c2 (88 %) marcaban casi todo |
+| 3. Limpieza de atípicas | Antes del umbral mínimo se quitan las muestras bajo Q1 − 1,5·IQR | Agua bien en las 3 imágenes: precisión 0,84–1,00 (río: 97 % → 19 %) |
+| 4. Todos los materiales | Muestras nuevas en ImageJ (rama `DatosCSV`); cada material se compara contra los demás (`--muestras`) | En curso: asfalto y concreto bien; teja y vegetación de c4 aún marcan de más |
+| Material de presentación | Video explicativo (HyperFrames, carpeta `video/`, no está en git), explicación, reporte y guion | Ver "Documentos" |
 
 ## Plan: identificación de materiales
 
@@ -32,12 +58,12 @@ Queremos identificar con la longitud de arco **todos los materiales** que aparec
 agua, techos de lámina, asbesto, vegetación, tierra, etc. Empezamos de cero con muestras nuevas:
 los datos viejos de `puntos/` y `originales/` **no se usan**.
 
-| Fase | Qué se hace | Quién |
-|---|---|---|
-| 1 | Marcar los materiales en las 4 imágenes con ImageJ y exportar las zonas en CSV | **Samuel Cogollo** |
-| 2 | Revisar las muestras y calcular la firma promedio de cada material | Nosotros |
-| 3 | Un notebook por imagen con la longitud de arco de cada material y sus métricas | Nosotros |
-| 4 | Mapa final de cada imagen con todos los materiales pintados | Nosotros |
+| Fase | Qué se hace | Quién | Estado |
+|---|---|---|---|
+| 1 | Marcar los materiales en las 4 imágenes con ImageJ y exportar las zonas en CSV | **Samuel Cogollo** | 🟡 Primera entrega en la rama `DatosCSV`; faltan materiales (ver la tabla) |
+| 2 | Revisar las muestras y calcular la firma promedio de cada material | Nosotros | ✅ Revisadas; limpieza de atípicas lista |
+| 3 | Un notebook por imagen con la longitud de arco de cada material y sus métricas | Nosotros | ✅ `generar_notebooks.py --muestras` (probado con la primera entrega) |
+| 4 | Mapa final de cada imagen con todos los materiales pintados | Nosotros | 🟡 Funciona; falta correrlo con las muestras completas |
 
 ### Tarea de Samuel Cogollo: marcar materiales en ImageJ
 
