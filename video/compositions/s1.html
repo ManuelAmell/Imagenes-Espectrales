@@ -1,0 +1,42 @@
+<template>
+  <style>
+
+#root{position:absolute;inset:0;background:#12171c;color:#f2efe8;font-family:'Inter',sans-serif;overflow:hidden}
+#root .clip{position:absolute}
+.h{font-family:'Outfit',sans-serif;font-weight:700;letter-spacing:-0.02em;line-height:1.1}
+.t{font-size:44px;line-height:1.25}
+.g{color:#9aa5ad}
+.b{font-weight:700}
+svg text{font-family:'Inter',sans-serif}
+img{display:block}
+
+  </style>
+  <div data-hf-id="hf-3pu3" id="root" data-composition-id="s1" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-fykv" id="s1-title" class="clip h" data-hold data-start="0" data-duration="7" style="left:120px;top:300px;width:900px;font-size:98px;white-space:nowrap">¿Qué material hay<br data-hf-id="hf-x5px">en cada <span data-hf-id="hf-tfhk" style="color:#34c7e8">píxel</span>?</div>
+    <div data-hf-id="hf-f4z6" id="s1-sub" class="clip t g" data-hold data-start="1.3" data-duration="5.7" style="left:120px;top:680px;width:820px;font-size:38px;line-height:1.3">Identificar materiales en imágenes hiperespectrales de Cartagena con la longitud de arco</div>
+    <div data-hf-id="hf-5atk" id="s1-img1" class="clip " data-hold data-start="0" data-duration="7" style="left:1010px;top:160px;width:370px;height:370px"><img data-hf-id="hf-z7k2" src="assets/img/cartagena1.png" width="370" height="370" alt="Cartagena 1"></div>
+    <div data-hf-id="hf-b8gu" id="s1-img2" class="clip " data-hold data-start="0" data-duration="7" style="left:1396px;top:160px;width:370px;height:370px"><img data-hf-id="hf-4k9k" src="assets/img/cartagena2.png" width="370" height="370" alt="Cartagena 2"></div>
+    <div data-hf-id="hf-uuh6" id="s1-img3" class="clip " data-hold data-start="0" data-duration="7" style="left:1010px;top:546px;width:370px;height:370px"><img data-hf-id="hf-d3o6" src="assets/img/cartagena3.png" width="370" height="370" alt="Cartagena 3"></div>
+    <div data-hf-id="hf-k7pc" id="s1-img4" class="clip " data-hold data-start="0" data-duration="7" style="left:1396px;top:546px;width:370px;height:370px"><img data-hf-id="hf-nuk8" src="assets/img/cartagena4.png" width="370" height="370" alt="Cartagena 4"></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      function inn(sel, t, d, y) {
+        tl.fromTo(sel, { opacity: 0, y: y === undefined ? 28 : y }, { opacity: 1, y: 0, duration: d || 0.55, ease: 'power3.out' }, t);
+      }
+      function out(sel, t) {
+        tl.to(sel, { opacity: 0, duration: 0.25, ease: 'power2.in' }, t);
+      }
+      function draw(sel, t, d) {
+        tl.fromTo(sel, { attr: { 'stroke-dashoffset': 1 } }, { attr: { 'stroke-dashoffset': 0 }, duration: d, ease: 'power1.inOut' }, t);
+      }
+
+      tl.fromTo('#s1-title', { y: 40 }, { y: 0, duration: 0.8, ease: 'power3.out' }, 0);
+      inn('#s1-sub', 1.3, 0.6, 24);
+      ['#s1-img1', '#s1-img2', '#s1-img3', '#s1-img4'].forEach((s, i) => tl.fromTo(s, { y: 30 }, { y: 0, duration: 0.7, ease: 'power3.out' }, 0.15 * i));
+
+      window.__timelines['s1'] = tl;
+    })();
+  </script>
+</template>

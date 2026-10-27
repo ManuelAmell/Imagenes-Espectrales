@@ -1,0 +1,42 @@
+<template>
+  <style>
+
+#root{position:absolute;inset:0;background:#12171c;color:#f2efe8;font-family:'Inter',sans-serif;overflow:hidden}
+#root .clip{position:absolute}
+.h{font-family:'Outfit',sans-serif;font-weight:700;letter-spacing:-0.02em;line-height:1.1}
+.t{font-size:44px;line-height:1.25}
+.g{color:#9aa5ad}
+.b{font-weight:700}
+svg text{font-family:'Inter',sans-serif}
+img{display:block}
+
+  </style>
+  <div data-hf-id="hf-2tvg" id="root" data-composition-id="s4" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-ek1f" id="s4-img" class="clip " data-hold data-start="0.3" data-duration="13.7" style="left:120px;top:220px;width:640px;height:640px"><img data-hf-id="hf-s0vk" src="assets/img/cartagena4.png" width="640" height="640" alt="Cartagena 4"><svg data-hf-id="hf-2k3k" width="640" height="640" viewBox="0 0 640 640" style="position:absolute;left:0;top:0"><rect data-hf-id="hf-l30e" id="s4-b1" x="59.7" y="409.6" width="170.7" height="136.5" fill="none" stroke="#34c7e8" stroke-width="5" stroke-dasharray="1" stroke-dashoffset="1" pathLength="1" rx="2"/><rect data-hf-id="hf-6ddg" id="s4-b2" x="345.6" y="260.3" width="85.3" height="102.4" fill="none" stroke="#6ad46b" stroke-width="5" stroke-dasharray="1" stroke-dashoffset="1" pathLength="1" rx="2"/></svg></div>
+    <div data-hf-id="hf-rzn3" id="s4-r1" class="clip " data-hold data-start="0.8" data-duration="13.2" style="left:880px;top:190px;width:900px;border-left:8px solid #34c7e8;padding-left:32px"><div data-hf-id="hf-mwei" class="t b" style="font-size:44px;line-height:1.2">Marcamos a mano zonas donde seguro hay un material</div><div data-hf-id="hf-u52b" class="t g" style="font-size:36px;margin-top:10px">Los materiales nuevos, en ImageJ, píxel por píxel</div></div>
+    <div data-hf-id="hf-b5bh" id="s4-r2" class="clip " data-hold data-start="4.6" data-duration="9.4" style="left:880px;top:450px;width:900px;border-left:8px solid #6ad46b;padding-left:32px"><div data-hf-id="hf-m7wb" class="t b" style="font-size:44px;line-height:1.2">De cada material, 250 píxeles al azar, y otros 250 de lo que no es</div></div>
+    <div data-hf-id="hf-amb6" id="s4-r3" class="clip " data-hold data-start="8.4" data-duration="5.6" style="left:880px;top:690px;width:900px;border-left:8px solid #f5c542;padding-left:32px"><div data-hf-id="hf-hvmm" class="t b" style="font-size:44px;line-height:1.2">80 % para entrenar, 20 % para probar</div><div data-hf-id="hf-i59h" style="margin-top:22px"><span data-hf-id="hf-1lmd" style="display:inline-block;width:56px;height:56px;margin-right:10px;background:#34c7e8"></span><span data-hf-id="hf-ui95" style="display:inline-block;width:56px;height:56px;margin-right:10px;background:#34c7e8"></span><span data-hf-id="hf-vp68" style="display:inline-block;width:56px;height:56px;margin-right:10px;background:#34c7e8"></span><span data-hf-id="hf-vav7" style="display:inline-block;width:56px;height:56px;margin-right:10px;background:#34c7e8"></span><span data-hf-id="hf-tbc2" style="display:inline-block;width:56px;height:56px;margin-right:10px;background:#34c7e8"></span><span data-hf-id="hf-sx11" style="display:inline-block;width:56px;height:56px;margin-right:10px;background:#34c7e8"></span><span data-hf-id="hf-u3y4" style="display:inline-block;width:56px;height:56px;margin-right:10px;background:#34c7e8"></span><span data-hf-id="hf-tpn3" style="display:inline-block;width:56px;height:56px;margin-right:10px;background:#34c7e8"></span><span data-hf-id="hf-yfqo" style="display:inline-block;width:56px;height:56px;margin-right:10px;background:#f5c542"></span><span data-hf-id="hf-1slk" style="display:inline-block;width:56px;height:56px;margin-right:10px;background:#f5c542"></span></div><div data-hf-id="hf-l9r0" class="g" style="position:relative;height:40px;font-size:30px;margin-top:8px"><span data-hf-id="hf-6t3t" style="position:absolute;left:0">entrenar</span><span data-hf-id="hf-vdrb" style="position:absolute;left:528px">probar</span></div></div>
+    <div data-hf-id="hf-g6au" id="s4-note" class="clip g" data-hold data-start="1.0" data-duration="13.0" style="left:120px;top:880px;font-size:28px">Recuadros ilustrativos: agua y vegetación</div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      function inn(sel, t, d, y) {
+        tl.fromTo(sel, { opacity: 0, y: y === undefined ? 28 : y }, { opacity: 1, y: 0, duration: d || 0.55, ease: 'power3.out' }, t);
+      }
+      function out(sel, t) {
+        tl.to(sel, { opacity: 0, duration: 0.25, ease: 'power2.in' }, t);
+      }
+      function draw(sel, t, d) {
+        tl.fromTo(sel, { attr: { 'stroke-dashoffset': 1 } }, { attr: { 'stroke-dashoffset': 0 }, duration: d, ease: 'power1.inOut' }, t);
+      }
+
+      inn('#s4-img', 0.3, 0.6, 30);
+      draw('#s4-b1', 1.2, 1.2); draw('#s4-b2', 1.9, 1.2);
+      inn('#s4-note', 1.0, 0.5, 0);
+      inn('#s4-r1', 0.8); inn('#s4-r2', 4.6); inn('#s4-r3', 8.4);
+
+      window.__timelines['s4'] = tl;
+    })();
+  </script>
+</template>

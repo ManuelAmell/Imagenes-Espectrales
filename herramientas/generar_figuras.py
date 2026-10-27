@@ -1,10 +1,10 @@
 """Genera las figuras de los documentos (docs/fuentes/img/fig_*.png) a partir de datos.json.
 
 Uso (desde la raíz del repo):
-    .venv/bin/python docs/fuentes/generar_figuras.py
+    .venv/bin/python herramientas/generar_figuras.py
 
-datos.json tiene datos reales del proyecto: firmas promedio de cartagena4 y las similitudes
-de 200 muestras del río de cartagena3.
+docs/fuentes/datos.json tiene datos reales del proyecto: firmas promedio de cartagena4 y las
+similitudes de 200 muestras del río de cartagena3.
 """
 import json
 import os
@@ -14,7 +14,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-AQUI = os.path.dirname(os.path.abspath(__file__))
+RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+AQUI = os.path.join(RAIZ, "docs", "fuentes")
 IMG = os.path.join(AQUI, "img")
 COLORES = {"agua salada": "#1fb6d4", "asfalto": "#6c7a89", "techo concreto": "#f2a516", "vegetacion": "#2fb36b"}
 NOMBRES = {"agua salada": "Agua salada", "asfalto": "Asfalto", "techo concreto": "Techo de concreto", "vegetacion": "Vegetación"}

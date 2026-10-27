@@ -1,0 +1,43 @@
+<template>
+  <style>
+
+#root{position:absolute;inset:0;background:#12171c;color:#f2efe8;font-family:'Inter',sans-serif;overflow:hidden}
+#root .clip{position:absolute}
+.h{font-family:'Outfit',sans-serif;font-weight:700;letter-spacing:-0.02em;line-height:1.1}
+.t{font-size:44px;line-height:1.25}
+.g{color:#9aa5ad}
+.b{font-weight:700}
+svg text{font-family:'Inter',sans-serif}
+img{display:block}
+
+  </style>
+  <div data-hf-id="hf-6yl5" id="root" data-composition-id="s7" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-2smc" id="s7-f" class="clip h" data-hold data-start="0.3" data-duration="12.7" style="left:120px;top:100px;font-size:76px;white-space:nowrap">similitud = 100 · (1 − <span data-hf-id="hf-ydw9" style="color:#ff9a3c">|A − B|</span> / (|A| + |B|))</div>
+    <div data-hf-id="hf-6414" id="s7-d1" class="clip t" data-hold data-start="2.0" data-duration="11.0" style="left:120px;top:250px;font-size:42px"><b data-hf-id="hf-01fn" style="color:#34c7e8">A</b> = longitud de arco del píxel &nbsp;&nbsp; <b data-hf-id="hf-ws7u" style="color:#ff9a3c">B</b> = la de la firma promedio</div>
+    <div data-hf-id="hf-1jbr" id="s7-d2" class="clip t g" data-hold data-start="3.4" data-duration="9.6" style="left:120px;top:325px;font-size:42px">Se calcula en cada tramo y se promedia</div>
+    <div data-hf-id="hf-bkcc" id="s7-ex" class="clip t" data-hold data-start="5.4" data-duration="7.6" style="left:120px;top:470px;width:1600px;font-size:44px;line-height:1.3">Ejemplo: píxel de <b data-hf-id="hf-qzxq" style="color:#34c7e8">agua</b> frente a la firma de <b data-hf-id="hf-9lz0" style="color:#6ad46b">vegetación</b></div>
+    <div data-hf-id="hf-w41b" id="s7-calc" class="clip t" data-hold data-start="6.4" data-duration="6.6" style="left:120px;top:600px;font-size:44px;white-space:nowrap">tramo 1: 0,03 y 0,31 → 17 % &nbsp;&nbsp;·&nbsp;&nbsp; tramo 2: 0,02 y 0,49 → 7 % &nbsp;&nbsp;·&nbsp;&nbsp; <b data-hf-id="hf-70gw">promedio: 12 %</b></div>
+    <div data-hf-id="hf-ecsk" id="s7-bar" class="clip " data-hold data-start="8.0" data-duration="5.0" style="left:0;top:760px"><svg data-hf-id="hf-zhls" width="1920" height="170" viewBox="0 0 1920 170"><rect data-hf-id="hf-q1x6" x="140" y="70" width="1640" height="18" fill="#2b343c" rx="9"/><rect data-hf-id="hf-j1xf" id="s7-fill" x="140" y="70" width="196.3" height="18" fill="#ff5c4d" rx="9"/><circle data-hf-id="hf-3je4" id="s7-dot" cx="336.3" cy="79" r="20" fill="#f2efe8"/><text data-hf-id="hf-ehkk" x="140" y="130" font-size="30" fill="#9aa5ad">0 %  muy distinto</text><text data-hf-id="hf-la5o" x="1780" y="130" font-size="30" fill="#9aa5ad" text-anchor="end">igual  100 %</text><text data-hf-id="hf-3bju" id="s7-mk" x="336.3" y="40" font-size="40" font-weight="700" fill="#f2efe8" text-anchor="middle">12 %</text></svg></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      function inn(sel, t, d, y) {
+        tl.fromTo(sel, { opacity: 0, y: y === undefined ? 28 : y }, { opacity: 1, y: 0, duration: d || 0.55, ease: 'power3.out' }, t);
+      }
+      function out(sel, t) {
+        tl.to(sel, { opacity: 0, duration: 0.25, ease: 'power2.in' }, t);
+      }
+      function draw(sel, t, d) {
+        tl.fromTo(sel, { attr: { 'stroke-dashoffset': 1 } }, { attr: { 'stroke-dashoffset': 0 }, duration: d, ease: 'power1.inOut' }, t);
+      }
+
+      inn('#s7-f', 0.3, 0.7, 30); inn('#s7-d1', 2.0); inn('#s7-d2', 3.4);
+      inn('#s7-ex', 5.4); inn('#s7-calc', 6.4); inn('#s7-bar', 8.0, 0.5, 0);
+      tl.fromTo('#s7-fill', { attr: { width: 0 } }, { attr: { width: 196.3 }, duration: 1.2, ease: 'power2.out' }, 8.4);
+      tl.fromTo('#s7-dot', { attr: { cx: 140 } }, { attr: { cx: 336.3 }, duration: 1.2, ease: 'power2.out' }, 8.4);
+
+      window.__timelines['s7'] = tl;
+    })();
+  </script>
+</template>

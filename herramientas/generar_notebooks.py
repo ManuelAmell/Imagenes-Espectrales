@@ -8,7 +8,7 @@ Sin opciones: cada datos/cartagena<N>/recuadros/<material>.csv (menos otros.csv)
 y sale notebooks/cartagena<N>.ipynb.
 Con --muestras: cada datos/cartagena<N>/muestras/<material>.csv (de ImageJ: un píxel por fila con x,y
 o un rectángulo por fila con BX, BY, Width, Height) es un material y sale notebooks/cartagena<N>_materiales.ipynb.
-Cada material se compara usando la longitud de arco, igual que en Cuaderno_Asbesto_ArcoV3.ipynb
+Cada material se compara usando la longitud de arco, igual que en referencia/Cuaderno_Asbesto_ArcoV3.ipynb
 (2 tramos de bandas, similitud porcentual y umbral = similitud mínima), contra recuadros/otros.csv
 o, con --muestras, contra los demás materiales de la misma imagen.
 """

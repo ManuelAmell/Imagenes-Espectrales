@@ -1,7 +1,7 @@
 # Imágenes Espectrales: materiales con longitud de arco
 
 Identificamos materiales en imágenes hiperespectrales de Cartagena (750×750 píxeles, 380 bandas)
-usando la **longitud de arco** de su firma espectral, el mismo método de `Cuaderno_Asbesto_ArcoV3.ipynb`:
+usando la **longitud de arco** de su firma espectral, el mismo método de `referencia/Cuaderno_Asbesto_ArcoV3.ipynb`:
 
 1. Se toman muestras del material y de otros materiales.
 2. Se calcula la firma promedio (mediana) del material.
@@ -12,7 +12,9 @@ usando la **longitud de arco** de su firma espectral, el mismo método de `Cuade
 ## Estructura
 
 ```
-Cuaderno_Asbesto_ArcoV3.ipynb   notebook original (asbesto), de referencia
+referencia/
+  Cuaderno_Asbesto_ArcoV3.ipynb   notebook original (asbesto) en el que se basa el método
+  cartagena_test.hdr              encabezado de la imagen que usaba ese notebook
 datos/cartagenaN/
   imagen/      cartagenaN.hdr, cartagenaN.img (NO está en git), cartagenaN.png
   muestras/    <material>.csv  ← muestras NUEVAS de los materiales (tarea de Samuel, ver el plan)
@@ -20,26 +22,38 @@ datos/cartagenaN/
   puntos/      puntos de muestra viejos (x,y), ya no se usan en los notebooks
   originales/  archivos de puntos tal como llegaron
 herramientas/
-  marcar_recuadros.py   para dibujar recuadros de muestra sobre una imagen
   generar_notebooks.py  arma notebooks/cartagenaN.ipynb (agua) y cartagenaN_materiales.ipynb (--muestras)
+  marcar_recuadros.py   para dibujar recuadros de muestra sobre una imagen (OpenCV)
+  generar_figuras.py    figuras de los documentos, desde docs/fuentes/datos.json
+  generar_pdfs.sh       convierte docs/fuentes/*.html en los PDF de docs/
 notebooks/     un notebook por imagen
-resultados/    imágenes marcadas que salen de los notebooks
-docs/          explicación del método y reporte en PDF, guion del video (ver "Documentos")
+resultados/    imágenes pintadas que salen de los notebooks + ANTES_Y_DESPUES.md
+docs/          video, explicación del método y reporte en PDF, guion del video (ver "Documentos")
+  fuentes/     HTML, CSS, imágenes y datos con los que se arman los PDF
+video/         proyecto HyperFrames del video (para editarlo o volver a renderizarlo)
 ```
 
 ## Documentos
 
 | Archivo | Qué es |
 |---|---|
+| [docs/video_explicativo.mp4](docs/video_explicativo.mp4) | Video explicativo del proyecto (~3 min, solo texto, sin sonido) |
 | [docs/explicacion_metodo.pdf](docs/explicacion_metodo.pdf) | Cómo reconocemos materiales con la longitud de arco: el paso a paso del notebook, del píxel a la imagen pintada, con figuras de datos reales |
 | [docs/reporte.pdf](docs/reporte.pdf) | Reporte del proyecto: datos, método, las 4 etapas con sus resultados, limitaciones y lo que sigue |
 | [docs/guion_pitch_video.md](docs/guion_pitch_video.md) | Guion de ~1 minuto para presentar el video en voz alta |
 
-Las fuentes están en `docs/fuentes/` (HTML + CSS). Para regenerarlos:
+Las fuentes de los PDF están en `docs/fuentes/` (HTML + CSS). Para regenerarlos:
 
 ```bash
-.venv/bin/python docs/fuentes/generar_figuras.py   # figuras desde docs/fuentes/datos.json
-bash docs/fuentes/generar_pdfs.sh                   # HTML → PDF con Chromium
+.venv/bin/python herramientas/generar_figuras.py   # figuras desde docs/fuentes/datos.json
+bash herramientas/generar_pdfs.sh                   # HTML → PDF con Chromium
+```
+
+El video se edita en `video/` con [HyperFrames](https://hyperframes.heygen.com) (necesita Node):
+
+```bash
+cd video && npx hyperframes preview          # vista previa para editarlo
+npx hyperframes render --output ../docs/video_explicativo.mp4   # volver a renderizarlo
 ```
 
 ## Lo que se ha hecho
@@ -50,7 +64,19 @@ bash docs/fuentes/generar_pdfs.sh                   # HTML → PDF con Chromium
 | 2. Muestras a mano | Recuadros de agua marcados donde seguro hay agua (y `otros`) | c4 y la laguna bien; el río (97 %) y c2 (88 %) marcaban casi todo |
 | 3. Limpieza de atípicas | Antes del umbral mínimo se quitan las muestras bajo Q1 − 1,5·IQR | Agua bien en las 3 imágenes: precisión 0,84–1,00 (río: 97 % → 19 %) |
 | 4. Todos los materiales | Muestras nuevas en ImageJ (rama `DatosCSV`); cada material se compara contra los demás (`--muestras`) | En curso: asfalto y concreto bien; teja y vegetación de c4 aún marcan de más |
-| Material de presentación | Video explicativo (HyperFrames, carpeta `video/`, no está en git), explicación, reporte y guion | Ver "Documentos" |
+| Material de presentación | Video explicativo (`docs/video_explicativo.mp4`, editable en `video/`), explicación, reporte y guion | Ver "Documentos" |
+
+## Historia: qué se usó, por qué y qué se dejó de usar
+
+| Qué | Cómo y por qué se usó | ¿Sigue en uso? |
+|---|---|---|
+| `datos/*/originales/` | Los archivos de puntos tal como llegaron del Drive (txt, csv, xlsx, docx), en formatos distintos | Se conservan como fuente original; ningún notebook los lee directamente |
+| `datos/*/puntos/` | **Etapa 1.** Los puntos originales pasados a CSV `x,y` (sí / no por material) para la primera prueba | Ya no. Varios puntos de "agua" caían en tierra y daban malos resultados, así que se cambiaron por recuadros marcados a mano. Se conservan como registro |
+| `herramientas/marcar_recuadros.py` + `datos/*/recuadros/` | **Etapas 2 y 3.** Abrir la imagen y dibujar con el mouse (OpenCV) recuadros donde seguro hay agua, y `otros.csv` con lo que seguro no es agua | Sí, para el agua: los notebooks de agua leen `recuadros/` y el script sirve para agregar o corregir recuadros. Para los materiales nuevos se cambió a ImageJ, porque deja marcar píxel por píxel y Samuel ya lo usa |
+| `recuadros/otros.csv` | Comparar el agua contra "lo que no es agua" para medir precisión | Solo para el agua. Para los materiales nuevos no sirve: tenía vegetación, techos y contenedores, justo lo que se iba a marcar. Por eso cada material se compara contra los demás materiales de la imagen |
+| Umbral = mínimo de las muestras (sin limpiar) | Igual al cuaderno original | Se cambió en la etapa 3: un solo píxel con ruido bajaba el mínimo y se pintaba casi toda la imagen. Ahora se quitan las muestras atípicas (regla del diagrama de caja) y luego se toma el mínimo |
+| `datos/*/muestras/` + ImageJ | **Etapa 4.** Muestras de todos los materiales (`x,y`), marcadas a mano | Sí |
+| `respaldo/` (borrada) | Los zips del Drive y copias de cuando se organizaron los datos | Se borró: se verificó byte a byte que todo estaba en `datos/`. Lo único que no estaba (`cartagena_test.hdr`) se movió a `referencia/`. Hay otra copia en la carpeta vieja `Programming-Exercises/PYTHON/CHANCHI` |
 
 ## Plan: identificación de materiales
 
@@ -61,9 +87,9 @@ los datos viejos de `puntos/` y `originales/` **no se usan**.
 | Fase | Qué se hace | Quién | Estado |
 |---|---|---|---|
 | 1 | Marcar los materiales en las 4 imágenes con ImageJ y exportar las zonas en CSV | **Samuel Cogollo** | 🟡 Primera entrega en la rama `DatosCSV`; faltan materiales (ver la tabla) |
-| 2 | Revisar las muestras y calcular la firma promedio de cada material | Nosotros | ✅ Revisadas; limpieza de atípicas lista |
-| 3 | Un notebook por imagen con la longitud de arco de cada material y sus métricas | Nosotros | ✅ `generar_notebooks.py --muestras` (probado con la primera entrega) |
-| 4 | Mapa final de cada imagen con todos los materiales pintados | Nosotros | 🟡 Funciona; falta correrlo con las muestras completas |
+| 2 | Revisar las muestras y calcular la firma promedio de cada material | **Manuel Amell** | ✅ Revisadas; limpieza de atípicas lista |
+| 3 | Un notebook por imagen con la longitud de arco de cada material y sus métricas | **Manuel Amell** | ✅ `generar_notebooks.py --muestras` (probado con la primera entrega) |
+| 4 | Mapa final de cada imagen con todos los materiales pintados | **Manuel Amell** | 🟡 Funciona; falta correrlo con las muestras completas |
 
 ### Tarea de Samuel Cogollo: marcar materiales en ImageJ
 
@@ -73,7 +99,7 @@ Una foto normal guarda 3 colores por píxel (rojo, verde, azul). Estas imágenes
 por píxel. Si graficas esos 380 valores obtienes una curva, la **firma espectral**, y cada material
 tiene una forma de curva propia: el agua, un techo de zinc y un árbol se ven distintos.
 
-Tú marcas **dónde** está cada material y nosotros sacamos la firma de esas zonas desde la imagen de 380 bandas.
+Tú marcas **dónde** está cada material y Manuel Amell saca la firma de esas zonas desde la imagen de 380 bandas.
 El método toma esas muestras, saca la firma "típica" de cada material y busca en toda la imagen
 los píxeles que se le parecen. **Si en una muestra se cuela un solo píxel de otra cosa** (una sombra,
 un borde, un carro), el método se vuelve permisivo y termina marcando casi toda la imagen.
@@ -259,6 +285,8 @@ gana el más parecido. Los resultados quedan en `resultados/`.
 También puedes abrir el notebook con `.venv/bin/jupyter lab` y correrlo celda por celda.
 
 ## Resultados actuales
+
+Cada imagen original al lado de su imagen pintada: [resultados/ANTES_Y_DESPUES.md](resultados/ANTES_Y_DESPUES.md).
 
 | Imagen | Material | Precisión | % marcado | Comentario |
 |---|---|---|---|---|
