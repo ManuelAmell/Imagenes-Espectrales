@@ -6,7 +6,8 @@ usando la **longitud de arco** de su firma espectral, el mismo método de `Cuade
 1. Se toman muestras del material y de otros materiales.
 2. Se calcula la firma promedio (mediana) del material.
 3. Para cada píxel se mide la longitud de arco en 2 tramos de bandas (40–140 y 150–270) y se compara con la del promedio (similitud porcentual).
-4. Se pinta el píxel si su similitud es mayor o igual al umbral, que es la similitud mínima de las muestras del material.
+4. Se pinta el píxel si su similitud es mayor o igual al umbral, que es la similitud mínima de las muestras del material
+   (después de quitar las muestras atípicas, ver "Resultados actuales").
 
 ## Estructura
 
@@ -235,12 +236,13 @@ También puedes abrir el notebook con `.venv/bin/jupyter lab` y correrlo celda p
 
 | Imagen | Material | Precisión | % marcado | Comentario |
 |---|---|---|---|---|
-| cartagena4 | agua salada | 0.98 | 42 % | Marca bien el mar |
-| cartagena3 | agua dulce (laguna café) | 0.94 | 27 % | Bien |
-| cartagena3 | agua dulce (río) | 0.50 | 97 % | El umbral mínimo queda muy bajo (~20) por píxeles con ruido |
-| cartagena2 | agua salada | 0.53 | 88 % | Mismo problema del umbral (~32) |
+| cartagena4 | agua salada | 1.00 | 39 % | Marca bien el mar |
+| cartagena3 | agua dulce (río) | 1.00 | 19 % | Marca el río y casi nada de tierra |
+| cartagena3 | agua dulce (laguna café) | 0.98 | 11 % | Bien, se queda un poco corto en la punta de abajo |
+| cartagena2 | agua salada | 0.84 | 49 % | Marca el mar, con manchas sueltas en el patio de contenedores |
 
-**Por qué fallan c2 y el río de c3:** entre el 1 % y el 5 % de los píxeles de agua tienen ruido
-(brillo del sol, olas, ruido del sensor). Si uno de ellos cae entre las 250 muestras, la similitud mínima
-baja mucho y casi todo pasa el umbral. Mejorar los recuadros ayuda, pero con el umbral mínimo sigue
-pasando. Se probó suavizar la firma y no sirvió.
+**Limpieza de muestras atípicas:** entre el 1 % y el 5 % de los píxeles de muestra tienen ruido
+(brillo del sol, olas, ruido del sensor, bordes). Antes, uno solo de ellos bajaba la similitud mínima y casi
+toda la imagen pasaba el umbral (el río marcaba el 97 % y c2 el 88 %). Ahora, antes de tomar el mínimo,
+se quitan las muestras atípicas con la regla del diagrama de caja (similitud menor que Q1 − 1,5·(Q3 − Q1)).
+El umbral sigue siendo la similitud mínima, pero de las muestras limpias.

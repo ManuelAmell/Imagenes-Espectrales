@@ -257,7 +257,9 @@ s1=long_arco(pix_prom_train[lim1:lim2])
 s2=long_arco(pix_prom_train[lim3:lim4])
 arr_s_prom=np.asarray([s1,s2])
 print(arr_s_prom)"""),
-        md("Probamos con las firmas del material para sacar el umbral (la similitud mínima, como en el original)"),
+        md("""Probamos con las firmas del material para sacar el umbral (la similitud mínima, como en el original).
+Antes quitamos las muestras atípicas: píxeles con ruido (brillos, olas, bordes) que quedan muy por debajo del resto.
+Usamos la regla del diagrama de caja: es atípica si su similitud es menor que Q1 - 1.5·(Q3 - Q1). Si no hay ruido, no se quita nada."""),
         code("""l_arc_si=[]
 for id,row in df_train.iterrows():
   if(row['label']==1):
@@ -267,7 +269,16 @@ for id,row in df_train.iterrows():
     arr_s_pix=np.asarray([long_arco1,long_arco2])
     sim=similitud_porcentual(arr_s_prom,arr_s_pix)
     l_arc_si.append(sim)
-umbral=round(np.min(l_arc_si),3)
+q1,q3=np.percentile(l_arc_si,[25,75])
+limite=q1-1.5*(q3-q1)
+limpias=[s for s in l_arc_si if s>=limite]
+print("Muestras atípicas quitadas:", len(l_arc_si)-len(limpias), "de", len(l_arc_si))
+plt.boxplot(l_arc_si, vert=False)
+plt.axvline(limite, color="red", linestyle="--", label="límite de atípicas")
+plt.xlabel("Similitud con la firma promedio (%)")
+plt.legend()
+plt.show()
+umbral=round(np.min(limpias),3)
 print("Min", umbral)
 print("Max", round(np.max(l_arc_si),3))"""),
         md("Probamos con las firmas de otros materiales"),
