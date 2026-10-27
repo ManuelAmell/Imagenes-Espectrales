@@ -2,8 +2,13 @@
 
 Uso (desde la raíz del repo):
     .venv/bin/python herramientas/generar_notebooks.py <N> [<N> ...]
+    .venv/bin/python herramientas/generar_notebooks.py --muestras <N> [<N> ...]
 
-Cada archivo datos/cartagena<N>/recuadros/<material>.csv (menos otros.csv) es un material.
+Sin opciones: cada datos/cartagena<N>/recuadros/<material>.csv (menos otros.csv) es un material
+y sale notebooks/cartagena<N>.ipynb.
+Con --muestras: cada datos/cartagena<N>/muestras/<material>.csv (el CSV de Results de ImageJ, con
+BX, BY, Width, Height) es un material y sale notebooks/cartagena<N>_materiales.ipynb.
+Los otros materiales salen del otros.csv de la misma carpeta (recuadros/ o muestras/).
 Cada material se compara contra otros.csv usando la longitud de arco, igual que en
 Cuaderno_Asbesto_ArcoV3.ipynb: 2 tramos de bandas, similitud porcentual y umbral = similitud mínima.
 """
@@ -17,14 +22,15 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LIMS = (40, 140, 150, 270)
 # Color (RGB) según cómo empieza el nombre del material; el resto toma uno de la paleta
 COLORES = {"agua_salada": (0, 255, 255), "agua_dulce": (255, 0, 255)}
-PALETA = [(255, 0, 0), (255, 255, 0), (0, 255, 0), (255, 128, 0), (128, 0, 255)]
+PALETA = [(255, 0, 0), (255, 255, 0), (0, 255, 0), (255, 128, 0), (128, 0, 255),
+          (0, 0, 255), (255, 255, 255), (128, 64, 0), (0, 128, 0), (255, 160, 200)]
 
 md = nbf.v4.new_markdown_cell
 code = nbf.v4.new_code_cell
 
 
-def materiales_de(n):
-    archivos = sorted(glob.glob(os.path.join(RAIZ, "datos", f"cartagena{n}", "recuadros", "*.csv")))
+def materiales_de(n, carpeta):
+    archivos = sorted(glob.glob(os.path.join(RAIZ, "datos", f"cartagena{n}", carpeta, "*.csv")))
     claves = [os.path.splitext(os.path.basename(a))[0] for a in archivos]
     claves = [c for c in claves if c != "otros"]
     resultado, libre = [], 0
@@ -40,13 +46,41 @@ def tiene_png(n):
     return os.path.exists(os.path.join(RAIZ, "datos", f"cartagena{n}", "imagen", f"cartagena{n}.png"))
 
 
-def celdas_inicio(n, materiales):
+def celdas_lectura(materiales, carpeta):
+    """Celdas que leen los recuadros de cada material y los de otros."""
+    if carpeta == "recuadros":
+        lectura = "\n".join(f"""recuadros["{c}"]=pd.read_csv(ruta+"/recuadros/{c}.csv")""" for c, _, _ in materiales)
+        lectura += """\nrecuadros_otros=pd.read_csv(ruta+"/recuadros/otros.csv")"""
+        explicacion = """# Recuadros de muestra
+Los recuadros (x1, y1, x2, y2) se marcan a mano con `herramientas/marcar_recuadros.py` y se guardan en `datos/cartagenaN/recuadros/`.
+Cada material tiene su archivo, y `otros.csv` tiene lo que seguro **no** es ninguno de los materiales."""
+    else:
+        lectura = """def leer_imagej(archivo):
+  #ImageJ guarda la esquina de arriba a la izquierda (BX, BY) y el tamaño (Width, Height) de cada rectángulo
+  m=pd.read_csv(archivo)
+  return pd.DataFrame({"x1":m.BX, "y1":m.BY, "x2":m.BX+m.Width, "y2":m.BY+m.Height}).round().astype(int)
+
+""" + "\n".join(f"""recuadros["{c}"]=leer_imagej(ruta+"/muestras/{c}.csv")""" for c, _, _ in materiales)
+        lectura += """\nrecuadros_otros=leer_imagej(ruta+"/muestras/otros.csv")"""
+        explicacion = """# Muestras de los materiales
+Las zonas de cada material se marcan con rectángulos en ImageJ y se guardan en `datos/cartagenaN/muestras/` (ver el README).
+Las pasamos a recuadros (x1, y1, x2, y2). `muestras/otros.csv` tiene lo que seguro **no** es ninguno de los materiales."""
+    return [
+        md(explicacion),
+        code(f"""recuadros={{}}
+{lectura}
+for nombre in recuadros:
+  print(nombre, ":", len(recuadros[nombre]), "recuadros")
+print("otros :", len(recuadros_otros), "recuadros")"""),
+    ]
+
+
+def celdas_inicio(n, materiales, carpeta):
     if tiene_png(n):
         base = f"""imagen=cv2.cvtColor(cv2.imread(ruta+"/imagen/cartagena{n}.png"), cv2.COLOR_BGR2RGB)"""
     else:
         base = """#Esta imagen no trae png: la armamos con las bandas (29, 50, 70), las mismas del original
 imagen=(get_rgb(img,(29,50,70))*255).astype(np.uint8)"""
-    lectura = "\n".join(f"""recuadros["{c}"]=pd.read_csv(ruta+"/recuadros/{c}.csv")""" for c, _, _ in materiales)
     return [
         md("Importamos librerías"),
         code("""from spectral import *
@@ -89,15 +123,7 @@ def similitud_porcentual(A, B):
   #Similitud por posición: 100 si iguales, 0 si muy distintos
   sims = 100 * (1 - np.abs(A - B) / (np.abs(A) + np.abs(B) + 1e-9))
   return np.mean(sims)"""),
-        md("""# Recuadros de muestra
-Los recuadros (x1, y1, x2, y2) se marcan a mano con `herramientas/marcar_recuadros.py` y se guardan en `datos/cartagenaN/recuadros/`.
-Cada material tiene su archivo, y `otros.csv` tiene lo que seguro **no** es ninguno de los materiales."""),
-        code(f"""recuadros={{}}
-{lectura}
-recuadros_otros=pd.read_csv(ruta+"/recuadros/otros.csv")
-for nombre in recuadros:
-  print(nombre, ":", len(recuadros[nombre]), "recuadros")
-print("otros :", len(recuadros_otros), "recuadros")"""),
+    ] + celdas_lectura(materiales, carpeta) + [
         md("Dibujamos los recuadros (cian = materiales, rojo = otros)"),
         code("""img_copy=imagen.copy()
 for nombre in recuadros:
@@ -296,7 +322,7 @@ umbrales["{clave}"]=umbral"""),
     ]
 
 
-def celdas_final(n, materiales):
+def celdas_final(n, materiales, sufijo):
     colores = "{" + ", ".join(f'"{c}":{col}' for c, _, col in materiales) + "}"
     return [
         md("# Imagen final con todos los materiales"),
@@ -318,37 +344,43 @@ plt.imshow(img_final)
 plt.legend(handles=[mpatches.Patch(color=np.array(colores[m])/255, label=m.replace("_"," ")) for m in colores], loc="upper right")
 plt.title("Cartagena {n}")
 plt.show()
-plt.imsave("../resultados/cartagena{n}_final.png", img_final)"""),
+plt.imsave("../resultados/cartagena{n}{sufijo}_final.png", img_final)"""),
     ]
 
 
-def generar(n):
-    materiales = materiales_de(n)
+def generar(n, carpeta="recuadros"):
+    # Los notebooks de muestras/ van aparte para no mezclarlos con los de agua
+    sufijo = "" if carpeta == "recuadros" else "_materiales"
+    materiales = materiales_de(n, carpeta)
     if not materiales:
-        print(f"cartagena{n}: no hay recuadros de materiales en datos/cartagena{n}/recuadros/, se omite")
+        print(f"cartagena{n}: no hay materiales en datos/cartagena{n}/{carpeta}/, se omite")
         return
-    if not os.path.exists(os.path.join(RAIZ, "datos", f"cartagena{n}", "recuadros", "otros.csv")):
-        print(f"cartagena{n}: falta otros.csv (márcalo con marcar_recuadros.py {n} otros), se omite")
+    if not os.path.exists(os.path.join(RAIZ, "datos", f"cartagena{n}", carpeta, "otros.csv")):
+        print(f"cartagena{n}: falta datos/cartagena{n}/{carpeta}/otros.csv, se omite")
         return
     titulo = " y ".join(nom for _, nom, _ in materiales)
     celdas = [md(f"# Cartagena {n}: {titulo} con longitud de arco")]
-    celdas += celdas_inicio(n, materiales)
+    celdas += celdas_inicio(n, materiales, carpeta)
     celdas.append(code("#Aquí se guardan los mapas de similitud y umbrales de cada material\nmapas={}\numbrales={}"))
     for k, (clave, nombre, color) in enumerate(materiales, start=1):
         celdas += celdas_material(n, k, clave, nombre, color)
     if len(materiales) > 1:
-        celdas += celdas_final(n, materiales)
+        celdas += celdas_final(n, materiales, sufijo)
     nb = nbf.v4.new_notebook()
     nb.cells = celdas
     nb.metadata["kernelspec"] = {"name": "python3", "display_name": "Python 3", "language": "python"}
-    salida = os.path.join(RAIZ, "notebooks", f"cartagena{n}.ipynb")
+    salida = os.path.join(RAIZ, "notebooks", f"cartagena{n}{sufijo}.ipynb")
     nbf.write(nb, salida)
     print("ok", os.path.relpath(salida, RAIZ))
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    args = sys.argv[1:]
+    carpeta = "recuadros"
+    if args and args[0] == "--muestras":
+        carpeta, args = "muestras", args[1:]
+    if not args:
         print(__doc__)
         sys.exit(1)
-    for n in sys.argv[1:]:
-        generar(int(n))
+    for n in args:
+        generar(int(n), carpeta)

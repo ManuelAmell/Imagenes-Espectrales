@@ -83,6 +83,7 @@ Son 4 imágenes de Cartagena de 750×750 píxeles. Para marcar usas el `.png` de
 | Tierra / suelo desnudo | ❓ | — | ❌ | ❌ |
 | Carretera / asfalto | ❌ | ❌ | ❌ | ❌ |
 | Contenedores | ❌ | ❌ | — | ❌ |
+| **Otros** (lo que no es ninguno de los de arriba, ver abajo) | ❌ | ❌ | ❌ | ❌ |
 
 La tabla es lo que **creemos** que hay mirando las fotos. Confírmalo tú al revisar cada imagen:
 si encuentras un material que no está en la tabla, márcalo también, y si algo de la tabla no aparece, no pasa nada.
@@ -116,6 +117,17 @@ Usa **ImageJ** (gratis y open source): <https://imagej.net/ij/download.html> (ta
 - Marca **varias zonas** de cada material en cada imagen, repartidas por la imagen (no todas juntas):
   como mínimo unas **3 zonas** o unos **200 píxeles** por material.
 
+#### El archivo `otros`
+
+Para medir si el método funciona, cada material se compara contra zonas que seguro **no** son ese material.
+Por eso, en **cada imagen**, marca también un `otros.csv` (igual que un material más) con zonas que
+**no sean ninguno** de los materiales que marcaste en esa imagen: sombras, carros, barcos, piscinas, tanques,
+canchas, muelles... Lo que haya y no tenga su propio archivo.
+
+- Que sean zonas variadas (varias cosas distintas), no todas iguales.
+- Nunca pongas en `otros` algo que también marcaste como material. Por ejemplo, si marcaste `vegetacion`,
+  ningún árbol puede ir en `otros`.
+
 #### Qué entregar y dónde
 
 El CSV que guarda ImageJ, **uno por material y por imagen**, en `datos/cartagenaN/muestras/<material>.csv`. Por ejemplo:
@@ -124,10 +136,11 @@ El CSV que guarda ImageJ, **uno por material y por imagen**, en `datos/cartagena
 datos/cartagena1/muestras/techo_lamina.csv
 datos/cartagena1/muestras/vegetacion.csv
 datos/cartagena3/muestras/tierra.csv
+datos/cartagena3/muestras/otros.csv
 ```
 
 - Nombres en minúscula y sin espacios ni tildes: `techo_lamina`, `asbesto`, `techo_teja`, `techo_concreto`,
-  `vegetacion`, `tierra`, `asfalto`, `contenedor`...
+  `vegetacion`, `tierra`, `asfalto`, `contenedor`... y `otros`.
 - El CSV debe tener las columnas `BX, BY, Width, Height` (una fila por rectángulo). Si no salen, revisa el paso de
   `Set Measurements`. `BX, BY` es la esquina de arriba a la izquierda del rectángulo, en píxeles.
 - Si te equivocaste en una zona, bórrala de la tabla (clic en la fila → `Edit > Clear`) antes de guardar,
@@ -153,6 +166,7 @@ Luego avisa a Manuel. Puedes subir por partes (por ejemplo, una imagen a la vez)
 - [ ] Revisé las 4 imágenes y marqué todos los materiales que encontré (los ❌ y los ❓ que sí aparecen).
 - [ ] Cada material tiene al menos ~3 zonas o ~200 píxeles por imagen.
 - [ ] Ninguna muestra toca bordes, sombras ni otro material.
+- [ ] Cada imagen tiene su `otros.csv`, sin nada de los materiales que marqué en ella.
 - [ ] Los archivos están en `datos/cartagenaN/muestras/` con nombres sin espacios.
 - [ ] Cada CSV tiene las columnas `BX, BY, Width, Height` y la escala estaba en píxeles.
 - [ ] Subí todo a la rama `muestras-samuel` y avisé.
@@ -201,6 +215,15 @@ cd notebooks && ../.venv/bin/jupyter nbconvert --to notebook --execute --inplace
 ```
 
 El generador toma **cada CSV** de `recuadros/` (menos `otros.csv`) como un material.
+
+Para los materiales de Samuel (los CSV de ImageJ en `muestras/`) se usa `--muestras`. Sale un notebook aparte,
+`cartagena4_materiales.ipynb`, que compara cada material contra `muestras/otros.csv`:
+
+```bash
+.venv/bin/python herramientas/generar_notebooks.py --muestras 4
+cd notebooks && ../.venv/bin/jupyter nbconvert --to notebook --execute --inplace cartagena4_materiales.ipynb
+```
+
 Si hay varios materiales en una imagen, al final sale una imagen conjunta donde, si un píxel pasa varios umbrales,
 gana el más parecido. Los resultados quedan en `resultados/`.
 
