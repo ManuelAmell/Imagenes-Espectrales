@@ -120,4 +120,72 @@ ax.spines["left"].set_visible(False)
 ax.legend(frameon=False, loc="upper left")
 guardar(fig, "fig_caja.png")
 
+# 6-8. Errores: salen de docs/fuentes/confusiones.json (herramientas/analizar_confusiones.py)
+CONF = os.path.join(AQUI, "confusiones.json")
+if os.path.exists(CONF):
+    conf = json.load(open(CONF))
+    COL_MAT = {"asfalto": "#6c7a89", "techo_concreto": "#f2a516", "techo_lamina": "#3d7bfd", "techo_teja": "#e8590c", "vegetacion": "#2fb36b"}
+    NOM_MAT = {"asfalto": "Asfalto", "techo_concreto": "Techo de concreto", "techo_lamina": "Techo de lámina", "techo_teja": "Techo de teja", "vegetacion": "Vegetación"}
+    c1 = conf["cartagena1"]["materiales"]
+    mats = list(c1)
+
+    # 6. Mapa de calor: % de los píxeles de cada material (fila) que pasan el umbral de otro (columna)
+    M = np.array([[c1[col]["pasan"][fila] for col in mats] for fila in mats])
+    fig, ax = plt.subplots(figsize=(8.6, 5.2))
+    ax.imshow(M, cmap="RdPu", vmin=0, vmax=100)
+    CORTO = {"asfalto": "Asfalto", "techo_concreto": "Concreto", "techo_lamina": "Lámina", "techo_teja": "Teja", "vegetacion": "Vegetación"}
+    ax.set_xticks(range(len(mats)), [f"{CORTO[m]}\n({c1[m]['umbral']:.0f})" for m in mats], fontsize=10)
+    ax.set_yticks(range(len(mats)), [NOM_MAT[m] for m in mats], fontsize=10)
+    ax.xaxis.tick_top()
+    for i in range(len(mats)):
+        for j in range(len(mats)):
+            v = M[i, j]
+            ax.text(j, i, f"{v:.0f} %", ha="center", va="center", fontsize=11,
+                    color="white" if v > 55 else TEXTO, fontweight="bold" if i != j and v > 10 else "normal")
+    for t, m in zip(ax.get_yticklabels(), mats):
+        t.set_color(COL_MAT[m]); t.set_fontweight("bold")
+    ax.set_ylabel("Píxeles marcados como…", fontsize=11)
+    ax.set_title("…que pasan el umbral de (entre paréntesis, el umbral):", fontsize=11, color=TEXTO, pad=48)
+    ax.tick_params(length=0)
+    for s in ax.spines.values():
+        s.set_visible(False)
+    guardar(fig, "fig_confusion_c1.png")
+
+    # 7. Nube de píxeles: las 2 longitudes de arco (izq.) y el brillo (der.) de cada material de cartagena1
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(10, 4.2), gridspec_kw={"width_ratios": [1.5, 1]})
+    for m in mats:
+        p = np.array(c1[m]["puntos"])
+        a1.scatter(p[:, 0], p[:, 1], s=9, alpha=0.45, color=COL_MAT[m], label=NOM_MAT[m])
+        a2.scatter(p[:, 2], np.full(len(p), mats.index(m)) + np.random.default_rng(1).uniform(-0.25, 0.25, len(p)),
+                   s=9, alpha=0.45, color=COL_MAT[m])
+    a1.set_xlabel("Longitud de arco, tramo 40–140")
+    a1.set_ylabel("Longitud de arco, tramo 150–270")
+    a1.set_title("Lo que ve el método: lámina, teja y vegetación se mezclan", fontsize=11, color=TEXTO, loc="left")
+    a1.legend(frameon=False, fontsize=9, markerscale=2)
+    a2.set_yticks(range(len(mats)), [NOM_MAT[m] for m in mats], fontsize=9)
+    a2.set_xlabel("Brillo (reflectancia media)")
+    a2.set_title("Lo que no ve: el brillo sí los separa", fontsize=11, color=TEXTO, loc="left")
+    guardar(fig, "fig_nube_c1.png")
+
+    # 8. Lo que no tiene muestra propia: ¿qué material se lo queda?
+    casos = [
+        ("c3 · suelo claro → vegetación", conf["cartagena3"]["zonas"]["otros: suelo claro"]["vegetacion"], "#8d6e4f"),
+        ("c4 · contenedores → asfalto", conf["cartagena4"]["zonas"]["otros: contenedores"]["asfalto"], "#c0392b"),
+        ("c4 · tanques → vegetación", conf["cartagena4"]["zonas"]["otros: tanques"]["vegetacion"], "#b0b7c3"),
+        ("c3 · barrio → vegetación", conf["cartagena3"]["zonas"]["otros: barrio"]["vegetacion"], "#e8590c"),
+        ("c3 · bodega → vegetación", conf["cartagena3"]["zonas"]["otros: bodega"]["vegetacion"], "#6c7a89"),
+        ("c3 · río (oeste) → asfalto", conf["cartagena3"]["zonas"]["agua_dulce_rio: rio oeste"]["asfalto"], "#1fb6d4"),
+        ("c4 · mar con brillo → asfalto", conf["cartagena4"]["zonas"]["agua_salada: mar con brillo"]["asfalto"], "#1fb6d4"),
+    ]
+    casos.sort(key=lambda c: -c[1])
+    fig, ax = plt.subplots(figsize=(9, 3.8))
+    y = np.arange(len(casos))[::-1]
+    ax.barh(y, [c[1] for c in casos], color=[c[2] for c in casos], height=0.6)
+    for yi, (_, v, _) in zip(y, casos):
+        ax.text(v + 1, yi, f"{v:.0f} %".replace(".", ","), va="center", fontsize=11, color=TEXTO)
+    ax.set_yticks(y, [c[0] for c in casos])
+    ax.set_xlim(0, 100)
+    ax.set_xlabel("% de la zona que pasa el umbral de ese material")
+    guardar(fig, "fig_sin_muestra.png")
+
 print("ok:", sorted(n for n in os.listdir(IMG) if n.startswith("fig_")))

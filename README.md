@@ -24,7 +24,8 @@ datos/cartagenaN/
 herramientas/
   generar_notebooks.py  arma notebooks/cartagenaN.ipynb (agua) y cartagenaN_materiales.ipynb (--muestras)
   marcar_recuadros.py   para dibujar recuadros de muestra sobre una imagen (OpenCV)
-  generar_figuras.py    figuras de los documentos, desde docs/fuentes/datos.json
+  analizar_confusiones.py  mide con qué se confunde cada material → docs/fuentes/confusiones.json (necesita los .img)
+  generar_figuras.py    figuras de los documentos, desde docs/fuentes/datos.json y confusiones.json
   generar_pdfs.sh       convierte docs/fuentes/*.html en los PDF de docs/
 notebooks/     un notebook por imagen
 resultados/    imágenes pintadas que salen de los notebooks + ANTES_Y_DESPUES.md
@@ -39,13 +40,14 @@ video/         proyecto HyperFrames del video (para editarlo o volver a renderiz
 |---|---|
 | [docs/video_explicativo.mp4](docs/video_explicativo.mp4) | Video explicativo del proyecto (~3 min, solo texto, sin sonido) |
 | [docs/explicacion_metodo.pdf](docs/explicacion_metodo.pdf) | Cómo reconocemos materiales con la longitud de arco: el paso a paso del notebook, del píxel a la imagen pintada, con figuras de datos reales |
-| [docs/reporte.pdf](docs/reporte.pdf) | Reporte del proyecto: datos, método, las 4 etapas con sus resultados, limitaciones y lo que sigue |
+| [docs/reporte.pdf](docs/reporte.pdf) | Reporte del proyecto: datos, método, las 4 etapas con sus resultados, por qué se equivoca (con datos medidos) y lo pendiente |
 | [docs/guion_pitch_video.md](docs/guion_pitch_video.md) | Guion de ~1 minuto para presentar el video en voz alta |
 
 Las fuentes de los PDF están en `docs/fuentes/` (HTML + CSS). Para regenerarlos:
 
 ```bash
-.venv/bin/python herramientas/generar_figuras.py   # figuras desde docs/fuentes/datos.json
+.venv/bin/python herramientas/analizar_confusiones.py   # confusiones entre materiales (necesita los .img)
+.venv/bin/python herramientas/generar_figuras.py   # figuras desde docs/fuentes/datos.json y confusiones.json
 bash herramientas/generar_pdfs.sh                   # HTML → PDF con Chromium
 ```
 

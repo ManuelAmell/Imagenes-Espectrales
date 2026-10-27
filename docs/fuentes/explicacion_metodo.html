@@ -145,7 +145,68 @@ El “% marcado” de los resultados es cuántos píxeles pasaron.</p>
   <span class="punto" style="background:#8000ff"></span>vegetación.</figcaption></figure>
 </div>
 
-<div class="pie">Todos los números y figuras salen de los datos reales del proyecto (cartagena3 y cartagena4).
+<h2><span class="num c6">10</span>¿Por qué se equivoca?</h2>
+<p>Los errores no son al azar: tienen causas que se pueden medir. Repetimos el método con las muestras y contamos
+<strong>qué porcentaje de los píxeles de cada material pasa el umbral de otro material</strong>
+(<code>herramientas/analizar_confusiones.py</code>).</p>
+
+<h3>1 · Mira la forma de la curva, no su brillo</h3>
+<p>Es la causa principal. La longitud de arco solo cuenta cuánto <strong>sube y baja</strong> la firma; dos materiales con subidas
+parecidas quedan con números parecidos aunque uno sea mucho más brillante que el otro.</p>
+<table>
+  <tr><th>cartagena1</th><th>L tramo 1</th><th>L tramo 2</th><th>Brillo</th><th>Umbral</th></tr>
+  <tr><td><span class="punto" style="background:#3d7bfd"></span>Techo de lámina</td><td class="n">0,19</td><td class="n">0,49</td><td class="n">0,31</td><td class="n">90</td></tr>
+  <tr><td><span class="punto" style="background:#e8590c"></span>Techo de teja</td><td class="n">0,22</td><td class="n">0,35</td><td class="n">0,27</td><td class="n">78</td></tr>
+  <tr><td><span class="punto" style="background:#2fb36b"></span>Vegetación</td><td class="n">0,33</td><td class="n">0,55</td><td class="n">0,17</td><td class="n">80</td></tr>
+  <tr><td><span class="punto" style="background:#6c7a89"></span>Asfalto</td><td class="n">0,04</td><td class="n">0,11</td><td class="n">0,13</td><td class="n">83</td></tr>
+  <tr><td><span class="punto" style="background:#f2a516"></span>Techo de concreto</td><td class="n">0,06</td><td class="n">0,29</td><td class="n">0,19</td><td class="n">91</td></tr>
+</table>
+<figure><img src="img/fig_nube_c1.png" alt="Nube de píxeles por longitud de arco y brillo">
+<figcaption>Cada punto es un píxel de muestra de cartagena1. A la izquierda, lo que usa el método: lámina, teja y vegetación caen en la
+misma zona. A la derecha, el brillo: ahí sí quedan separados, pero el método no lo usa.</figcaption></figure>
+<figure><img src="img/fig_confusion_c1.png" alt="Mapa de confusiones de cartagena1" style="max-height:95mm">
+<figcaption>Cómo se lee: de los píxeles de <strong>lámina</strong>, el 100 % pasa el umbral de <strong>teja</strong> y el 52 % el de <strong>vegetación</strong>.
+Asfalto y concreto no se confunden con nada (0 %): su forma es única.</figcaption></figure>
+<p>Lo mismo pasa con lo <strong>oscuro y plano</strong>: el agua y el asfalto tienen curvas casi planas. En cartagena3, el 18 % de una zona del río
+pasa como asfalto, y en cartagena4 el 13 % del mar con brillo del sol.</p>
+
+<h3>2 · Muestras muy variadas → umbral bajo → acepta de más</h3>
+<p>El umbral es la similitud de la <strong>peor</strong> muestra limpia. Si las muestras de un material son muy distintas entre sí, esa peor muestra
+se parece poco al promedio y el umbral queda bajo: entonces entran otros materiales.</p>
+<ul>
+  <li><strong>Teja (c1):</strong> sus muestras están muy dispersas (ver la nube: tejas más claras y más oscuras), así que tiene el umbral más bajo de c1
+      (78) y deja pasar el 100 % de la lámina. Por eso pinta el 30 % de la imagen.</li>
+  <li><strong>Vegetación (c4):</strong> mezcla árboles con luz y con sombra, umbral 69: el <strong>98 % del techo de concreto</strong> pasa como vegetación.
+      En el mapa final lo salva que el concreto se parece más a su propio promedio (gana el más parecido), pero su precisión cae a 0,56.</li>
+</ul>
+
+<h3>3 · Lo que no se marcó se lo queda el material más parecido</h3>
+<p>El método solo conoce los materiales que se marcaron. Un píxel de algo que nadie marcó (tierra, contenedores, tanques) se pinta con el
+material más parecido si pasa su umbral.</p>
+<figure><img src="img/fig_sin_muestra.png" alt="Zonas sin muestra propia y qué material se las queda">
+<figcaption>Zonas sin muestra propia (tomadas de <code>recuadros/</code>) y el material que se las queda. Por ejemplo, el 64 % de los contenedores
+de cartagena4 pasa como asfalto y el 63 % del suelo claro de cartagena3 como vegetación.</figcaption></figure>
+
+<h3>4 · Huecos en el agua: olas y brillo del sol</h3>
+<p>Al limpiar las muestras el umbral del agua sube (en el río, de 20 a 73). Así deja de pintarse la tierra, pero algunos píxeles de agua de verdad
+con olas, espuma o reflejos quedan por debajo y salen como puntitos sin pintar. Es el precio de no pintar la tierra: el recall baja de 1,00 a
+0,92–0,98, mientras la precisión sube.</p>
+
+<h3>5 · Métricas que se ven mejor de lo que son</h3>
+<ul>
+  <li>Cada material se compara <strong>solo contra los materiales marcados en su imagen</strong>: un 1,00 en cartagena3 significa “se distingue
+      del asfalto”, no “se distingue de todo”.</li>
+  <li>Con pocas muestras la prueba es pequeña: el asfalto de cartagena1 se prueba con solo 21 píxeles.</li>
+</ul>
+
+<div class="caja idea"><span class="t">Cómo se podría mejorar</span>
+<ul style="margin:0">
+  <li><strong>Agregar el brillo</strong> como tercer número junto a las 2 longitudes de arco: separaría lámina, teja y vegetación, y agua de asfalto.</li>
+  <li><strong>Marcar los materiales que faltan</strong> (tierra, contenedores, tanques, asbesto) para que no se los quede otro.</li>
+  <li><strong>Separar materiales muy variados</strong> en dos (por ejemplo, vegetación al sol y a la sombra) para que su umbral no baje tanto.</li>
+</ul></div>
+
+<div class="pie">Todos los números y figuras salen de los datos reales del proyecto (cartagena1, 3 y 4).
 Figuras: <code>herramientas/generar_figuras.py</code>.</div>
 </body>
 </html>

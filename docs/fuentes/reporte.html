@@ -102,6 +102,10 @@ diagrama de caja). Si no hay ruido no se quita nada; el umbral sigue siendo el m
   <figure><img src="img/despues_c2_agua_salada.png" alt="c2 después"><figcaption>c2 · mar (quedan manchas en contenedores)</figcaption></figure>
   <figure><img src="img/despues_c4_agua_salada.png" alt="c4 después"><figcaption>c4 · mar</figcaption></figure>
 </div>
+<div class="caja ojo"><span class="t">¿Por qué antes el agua “se veía” mejor?</span>
+Con el umbral bajo de antes, el agua salía de un color parejo porque pasaba <strong>todo</strong>: también los píxeles con olas y brillo… y la tierra
+(el río pintaba el 97 % de la imagen). Ahora el umbral es más exigente: casi no se pinta tierra, pero algunos píxeles de agua con olas o reflejos
+quedan sin pintar y se ven como puntitos (recall de 1,00 a 0,92–0,98). Se ve menos “lleno”, pero es más correcto.</div>
 
 <h3>Etapa 4 · Más materiales</h3>
 <p>Empezamos de cero con muestras nuevas, marcadas a mano en ImageJ, de asfalto, techos (lámina, teja, concreto) y vegetación.
@@ -131,13 +135,29 @@ Con pocos materiales por imagen, una precisión de 1,00 dice poco: solo signific
 Lo que no se marcó se pinta como el material más parecido: en c3 las bodegas salen como vegetación y parte del río como asfalto.
 Asbesto, tierra y contenedores no se alcanzaron a marcar, y c2 quedó solo con asfalto (no se puede comparar contra nada).</div>
 
-<h2><span class="num c6">6</span>Limitaciones</h2>
-<ul>
-  <li><strong>La longitud de arco mide la forma, no la altura</strong> de la firma: materiales oscuros y planos (agua, asfalto, sombras) se confunden.</li>
-  <li><strong>El umbral depende de las muestras:</strong> la limpieza ayuda mucho, pero muestras mal marcadas siguen dando malos resultados.</li>
-  <li><strong>Las métricas pueden ser optimistas</strong> cuando hay pocos ejemplos de “lo que no es” (en el agua dulce llegó a haber solo 22).</li>
-  <li><strong>Es lento:</strong> pintar recorre los 562.500 píxeles uno por uno, varios minutos por material.</li>
-</ul>
+<h2><span class="num c6">6</span>Por qué se equivoca</h2>
+<p>Medimos qué porcentaje de los píxeles de cada material pasa el umbral de otro (<code>herramientas/analizar_confusiones.py</code>).
+Los errores tienen 5 causas:</p>
+<table>
+  <tr><th>Causa</th><th>Ejemplo medido</th><th>Por qué pasa</th></tr>
+  <tr><td><strong>Mira la forma, no el brillo</strong></td><td>c1: el 100 % de la lámina pasa como teja y el 52 % como vegetación</td>
+      <td>Las 3 suben y bajan parecido (longitudes de arco cercanas) aunque su brillo es muy distinto (0,31 · 0,27 · 0,17), y el brillo no se usa</td></tr>
+  <tr><td><strong>Oscuro y plano</strong></td><td>c3: 18 % de una zona del río como asfalto; c4: 13 % del mar con brillo</td>
+      <td>Agua y asfalto tienen curvas casi planas: sus longitudes de arco son muy pequeñas y parecidas</td></tr>
+  <tr><td><strong>Muestras variadas → umbral bajo</strong></td><td>Teja de c1 (umbral 78, el más bajo) pinta el 30 %; vegetación de c4 (umbral 69) acepta el 98 % del concreto</td>
+      <td>El umbral es la peor muestra limpia: si las muestras son muy distintas entre sí, baja y entran otros materiales</td></tr>
+  <tr><td><strong>Lo que no se marcó</strong></td><td>c4: 64 % de los contenedores como asfalto; c3: 63 % del suelo claro como vegetación</td>
+      <td>El método solo conoce los materiales marcados; lo demás se lo queda el más parecido</td></tr>
+  <tr><td><strong>Métricas optimistas</strong></td><td>Precisión 1,00 en c3 con solo 2 materiales; asfalto de c1 probado con 21 píxeles</td>
+      <td>Cada material solo se compara contra los que se marcaron en su imagen</td></tr>
+</table>
+<figure><img src="img/fig_confusion_c1.png" alt="Mapa de confusiones de c1" style="max-height:95mm"><figcaption>c1: % de cada material (fila) que pasa el umbral de otro (columna).</figcaption></figure>
+<figure><img src="img/fig_sin_muestra.png" alt="Zonas sin muestra"><figcaption>Zonas sin muestra propia y el material que se las queda.</figcaption></figure>
+<figure><img src="img/fig_nube_c1.png" alt="Nube de píxeles"><figcaption>c1: con las 2 longitudes de arco, lámina, teja y vegetación se mezclan (izq.); con el brillo se separan (der.).</figcaption></figure>
+<p>Además, <strong>es lento</strong>: pintar recorre los 562.500 píxeles uno por uno, varios minutos por material.</p>
+<div class="caja idea"><span class="t">Cómo se podría mejorar</span>
+Agregar el <strong>brillo</strong> como tercer número junto a las 2 longitudes de arco (separaría lámina, teja y vegetación, y agua de asfalto);
+marcar los materiales que faltan; y separar en dos los materiales muy variados (vegetación al sol y a la sombra) para que su umbral no baje tanto.</div>
 
 <h2><span class="num c7">7</span>Lo que quedó pendiente</h2>
 <ol>
