@@ -63,7 +63,7 @@ npx hyperframes render --output ../docs/video_explicativo.mp4   # volver a rende
 | 1. Primera prueba | Método aplicado a todos los materiales con los puntos que llegaron | Solo el agua pasó de 0,7; el resto marcaba de más (techos de c1: 99 % de la imagen) |
 | 2. Muestras a mano | Recuadros de agua marcados donde seguro hay agua (y `otros`) | c4 y la laguna bien; el río (97 %) y c2 (88 %) marcaban casi todo |
 | 3. Limpieza de atípicas | Antes del umbral mínimo se quitan las muestras bajo Q1 − 1,5·IQR | Agua bien en las 3 imágenes: precisión 0,84–1,00 (río: 97 % → 19 %) |
-| 4. Todos los materiales | Muestras nuevas en ImageJ (rama `DatosCSV`); cada material se compara contra los demás (`--muestras`) | En curso: asfalto y concreto bien; teja y vegetación de c4 aún marcan de más |
+| 4. Más materiales | Muestras de Samuel en ImageJ (unidas a `master`); cada material se compara contra los demás (`--muestras`) | Asfalto y concreto bien (1,00); teja de c1 y vegetación de c4 marcan de más. Asbesto, tierra y contenedores no se alcanzaron a marcar |
 | Material de presentación | Video explicativo (`docs/video_explicativo.mp4`, editable en `video/`), explicación, reporte y guion | Ver "Documentos" |
 
 ## Historia: qué se usó, por qué y qué se dejó de usar
@@ -86,12 +86,15 @@ los datos viejos de `puntos/` y `originales/` **no se usan**.
 
 | Fase | Qué se hace | Quién | Estado |
 |---|---|---|---|
-| 1 | Marcar los materiales en las 4 imágenes con ImageJ y exportar las zonas en CSV | **Samuel Cogollo** | 🟡 Primera entrega en la rama `DatosCSV`; faltan materiales (ver la tabla) |
+| 1 | Marcar los materiales en las 4 imágenes con ImageJ y exportar las zonas en CSV | **Samuel Cogollo** | ✅ Entregado y unido a `master` (lo que no se alcanzó está en la tabla) |
 | 2 | Revisar las muestras y calcular la firma promedio de cada material | **Manuel Amell** | ✅ Revisadas; limpieza de atípicas lista |
-| 3 | Un notebook por imagen con la longitud de arco de cada material y sus métricas | **Manuel Amell** | ✅ `generar_notebooks.py --muestras` (probado con la primera entrega) |
-| 4 | Mapa final de cada imagen con todos los materiales pintados | **Manuel Amell** | 🟡 Funciona; falta correrlo con las muestras completas |
+| 3 | Un notebook por imagen con la longitud de arco de cada material y sus métricas | **Manuel Amell** | ✅ `notebooks/cartagenaN_materiales.ipynb` de c1, c3 y c4 (c2 solo tiene asfalto) |
+| 4 | Mapa final de cada imagen con todos los materiales pintados | **Manuel Amell** | ✅ `resultados/cartagenaN_materiales_final.png` y [ANTES_Y_DESPUES.md](resultados/ANTES_Y_DESPUES.md) |
 
 ### Tarea de Samuel Cogollo: marcar materiales en ImageJ
+
+> **Tarea cerrada.** Samuel entregó sus muestras en la rama `DatosCSV`, que ya se unió a `master`.
+> Lo que sigue se deja como registro de lo que se le pidió y de cómo se hizo.
 
 #### ¿Qué es una firma y por qué importa marcar bien?
 
@@ -137,7 +140,7 @@ Son 4 imágenes de Cartagena de 750×750 píxeles. Para marcar usas el `.png` de
 | Carretera / asfalto | ✅ | ✅ | ✅ | ✅ |
 | Contenedores | ❌ | ❌ | — | ❌ |
 
-Los ✅ de los materiales nuevos son las muestras que ya entregó Samuel (rama `DatosCSV`).
+Los ✅ de los materiales nuevos son las muestras que entregó Samuel. Los ❌ y ❓ que quedan no se alcanzaron a marcar.
 La tabla es lo que **creemos** que hay mirando las fotos. Confírmalo tú al revisar cada imagen:
 si encuentras un material que no está en la tabla, márcalo también, y si algo de la tabla no aparece, no pasa nada.
 
@@ -294,6 +297,21 @@ Cada imagen original al lado de su imagen pintada: [resultados/ANTES_Y_DESPUES.m
 | cartagena3 | agua dulce (río) | 1.00 | 19 % | Marca el río y casi nada de tierra |
 | cartagena3 | agua dulce (laguna café) | 0.98 | 11 % | Bien, se queda un poco corto en la punta de abajo |
 | cartagena2 | agua salada | 0.84 | 49 % | Marca el mar, con manchas sueltas en el patio de contenedores |
+
+Materiales (`notebooks/cartagenaN_materiales.ipynb`; cada material comparado contra los demás de su imagen):
+
+| Imagen | Material | Precisión | % marcado | Comentario |
+|---|---|---|---|---|
+| cartagena1 | asfalto | 1.00 | 17 % | Marca las calles |
+| cartagena1 | techo de concreto | 1.00 | 14 % | Bien |
+| cartagena1 | techo de lámina | 0.77 | 11 % | Marca los techos azules y algo de más |
+| cartagena1 | techo de teja | 0.56 | 30 % | Se extiende sobre otros techos |
+| cartagena1 | vegetación | 0.72 | 12 % | Marca los árboles |
+| cartagena3 | asfalto | 1.00 | 4 % | Marca la calle del borde del río |
+| cartagena3 | vegetación | 1.00 | 51 % | Marca el manglar, y también las bodegas (no hay otro material para ellas) |
+| cartagena4 | asfalto | 1.00 | 35 % | Se extiende sobre las bodegas |
+| cartagena4 | techo de concreto | 0.98 | 6 % | Marca el techo blanco grande |
+| cartagena4 | vegetación | 0.56 | 16 % | Marca los árboles y algo de más |
 
 **Limpieza de muestras atípicas:** entre el 1 % y el 5 % de los píxeles de muestra tienen ruido
 (brillo del sol, olas, ruido del sensor, bordes). Antes, uno solo de ellos bajaba la similitud mínima y casi

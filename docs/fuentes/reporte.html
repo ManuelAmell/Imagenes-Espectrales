@@ -10,14 +10,14 @@
 <section class="portada" style="background:linear-gradient(120deg,#1d2433 0%,#7c5cff 45%,#1fb6d4 100%)">
   <h1>Materiales en imágenes hiperespectrales de Cartagena</h1>
   <p>Reporte del proyecto · identificación con la longitud de arco de la firma espectral · octubre de 2026</p>
-  <div class="chips"><span>4 imágenes</span><span>380 bandas</span><span>agua: precisión 0,84 a 1,00</span><span>materiales nuevos en curso</span></div>
+  <div class="chips"><span>4 imágenes</span><span>380 bandas</span><span>agua: precisión 0,84 a 1,00</span><span>7 materiales: agua salada y dulce, asfalto, 3 techos, vegetación</span></div>
 </section>
 
 <div class="caja idea"><span class="t">En resumen</span>
 Usamos la <strong>longitud de arco</strong> de la firma espectral (el mismo método del cuaderno de asbesto) para encontrar materiales en 4 imágenes
 de Cartagena. El agua ya se identifica bien en las 3 imágenes donde aparece (precisión entre 0,84 y 1,00). El cambio clave fue
 <strong>quitar las muestras atípicas antes de sacar el umbral</strong>: el río pasó de pintar el 97 % de la imagen al 19 %.
-Ahora estamos sumando el resto de materiales (asfalto, techos, vegetación…), con primeros resultados prometedores.</div>
+Después sumamos asfalto, techos (concreto, lámina, teja) y vegetación: el asfalto y el concreto salen con precisión de 1,00.</div>
 
 <h2><span class="num c1">1</span>Objetivo</h2>
 <p>Marcar en cada imagen qué material hay en cada píxel, reconociéndolo por la forma de su firma espectral y midiendo esa forma con la
@@ -103,10 +103,10 @@ diagrama de caja). Si no hay ruido no se quita nada; el umbral sigue siendo el m
   <figure><img src="img/despues_c4_agua_salada.png" alt="c4 después"><figcaption>c4 · mar</figcaption></figure>
 </div>
 
-<h3>Etapa 4 · Todos los materiales (en curso)</h3>
+<h3>Etapa 4 · Más materiales</h3>
 <p>Empezamos de cero con muestras nuevas, marcadas a mano en ImageJ, de asfalto, techos (lámina, teja, concreto) y vegetación.
 Como no hay un “otros” para cada material, <strong>cada material se compara contra los demás de la misma imagen</strong>, y al final cada píxel se
-pinta con el material más parecido. Primeros resultados (ya con la limpieza de atípicas):</p>
+pinta con el material más parecido. Resultados (con la limpieza de atípicas):</p>
 <table>
   <tr><th>Imagen</th><th>Material</th><th>Precisión</th><th>% marcado</th></tr>
   <tr><td>c1</td><td><span class="mat asfalto">Asfalto</span></td><td class="n">1,00</td><td class="n">17 %</td></tr>
@@ -129,7 +129,7 @@ pinta con el material más parecido. Primeros resultados (ya con la limpieza de 
 <div class="caja ojo"><span class="t">Ojo con estos números</span>
 Con pocos materiales por imagen, una precisión de 1,00 dice poco: solo significa que se separa bien de los otros 1–4 materiales marcados.
 Lo que no se marcó se pinta como el material más parecido: en c3 las bodegas salen como vegetación y parte del río como asfalto.
-Faltan muestras de asbesto, tierra y contenedores, y c2 por ahora solo tiene asfalto.</div>
+Asbesto, tierra y contenedores no se alcanzaron a marcar, y c2 quedó solo con asfalto (no se puede comparar contra nada).</div>
 
 <h2><span class="num c6">6</span>Limitaciones</h2>
 <ul>
@@ -139,10 +139,9 @@ Faltan muestras de asbesto, tierra y contenedores, y c2 por ahora solo tiene asf
   <li><strong>Es lento:</strong> pintar recorre los 562.500 píxeles uno por uno, varios minutos por material.</li>
 </ul>
 
-<h2><span class="num c7">7</span>Lo que sigue</h2>
+<h2><span class="num c7">7</span>Lo que quedó pendiente</h2>
 <ol>
-  <li>Completar las muestras: asbesto, tierra, contenedores, lámina y teja en c3 y c4, y al menos 2 materiales en c2.</li>
-  <li>Unir esas muestras al proyecto y volver a correr los notebooks de materiales.</li>
+  <li>Marcar los materiales que no se alcanzaron: asbesto, tierra, contenedores, lámina y teja en c3 y c4, y un segundo material en c2.</li>
   <li>Revisar los materiales que siguen marcando de más (teja en c1, vegetación en c4).</li>
   <li>Opcional: hacer el pintado con numpy de una sola vez (mismo resultado, mucho más rápido).</li>
 </ol>
@@ -150,8 +149,8 @@ Faltan muestras de asbesto, tierra y contenedores, y c2 por ahora solo tiene asf
 <h2><span class="num" style="background:var(--ok)">✓</span>Conclusión</h2>
 <p>Resumir la firma de cada píxel en <strong>2 longitudes de arco</strong> basta para separar materiales con formas distintas, siempre que las
 muestras estén limpias. Con un cambio pequeño (quitar las muestras atípicas antes de tomar el mínimo), el agua pasó de fallar a identificarse
-bien en las 3 imágenes. El siguiente paso es completar las muestras del resto de materiales.</p>
+bien en las 3 imágenes, y el asfalto y el concreto también se separan bien. Con más materiales marcados, el mapa de cada imagen quedaría completo.</p>
 
-<div class="pie">Números tomados de los notebooks del proyecto. Los resultados de la etapa 4 son preliminares: sus muestras aún se están completando.</div>
+<div class="pie">Números tomados de los notebooks del proyecto (notebooks/cartagenaN.ipynb y cartagenaN_materiales.ipynb).</div>
 </body>
 </html>
