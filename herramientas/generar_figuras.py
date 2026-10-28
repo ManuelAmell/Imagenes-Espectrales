@@ -1,11 +1,4 @@
-"""Genera las figuras de los documentos (docs/fuentes/img/fig_*.png) a partir de datos.json.
-
-Uso (desde la raíz del repo):
-    .venv/bin/python herramientas/generar_figuras.py
-
-docs/fuentes/datos.json tiene datos reales del proyecto: firmas promedio de cartagena4 y las
-similitudes de 200 muestras del río de cartagena3.
-"""
+"""Genera las figuras de los documentos (docs/fuentes/img/fig_*.png) desde docs/fuentes/datos.json y confusiones.json."""
 import json
 import os
 
@@ -37,7 +30,8 @@ def long_arco(r):
     return float(np.sum(np.abs(np.diff(r))))
 
 
-datos = json.load(open(os.path.join(AQUI, "datos.json")))
+with open(os.path.join(AQUI, "datos.json")) as f:
+    datos = json.load(f)
 firmas = {k: np.array(v) for k, v in datos["firmas_cartagena4"].items()}
 rio = datos["rio_cartagena3"]
 
@@ -120,10 +114,11 @@ ax.spines["left"].set_visible(False)
 ax.legend(frameon=False, loc="upper left")
 guardar(fig, "fig_caja.png")
 
-# 6-8. Errores: salen de docs/fuentes/confusiones.json (herramientas/analizar_confusiones.py)
+# 6-8. Errores entre materiales (confusiones.json)
 CONF = os.path.join(AQUI, "confusiones.json")
 if os.path.exists(CONF):
-    conf = json.load(open(CONF))
+    with open(CONF) as f:
+        conf = json.load(f)
     COL_MAT = {"asfalto": "#6c7a89", "techo_concreto": "#f2a516", "techo_lamina": "#3d7bfd", "techo_teja": "#e8590c", "vegetacion": "#2fb36b"}
     NOM_MAT = {"asfalto": "Asfalto", "techo_concreto": "Techo de concreto", "techo_lamina": "Techo de lámina", "techo_teja": "Techo de teja", "vegetacion": "Vegetación"}
     c1 = conf["cartagena1"]["materiales"]

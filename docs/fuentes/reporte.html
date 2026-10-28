@@ -9,30 +9,31 @@
 
 <section class="portada" style="background:linear-gradient(120deg,#1d2433 0%,#7c5cff 45%,#1fb6d4 100%)">
   <h1>Materiales en imágenes hiperespectrales de Cartagena</h1>
-  <p>Reporte del proyecto · identificación con la longitud de arco de la firma espectral · octubre de 2026</p>
-  <div class="chips"><span>4 imágenes</span><span>380 bandas</span><span>agua: precisión 0,84 a 1,00</span><span>7 materiales: agua salada y dulce, asfalto, 3 techos, vegetación</span></div>
+  <p>Reporte del proyecto: identificación con la longitud de arco de la firma espectral · octubre de 2026</p>
+  <p style="margin-top:8px">Manuel Amell y Samuel Cogollo</p>
+  <div class="chips"><span>4 imágenes</span><span>380 bandas</span><span>agua: precisión de 0,84 a 1,00</span><span>7 materiales: agua salada y dulce, asfalto, 3 techos y vegetación</span></div>
 </section>
 
-<div class="caja idea"><span class="t">En resumen</span>
-Usamos la <strong>longitud de arco</strong> de la firma espectral (el mismo método del cuaderno de asbesto) para encontrar materiales en 4 imágenes
-de Cartagena. El agua ya se identifica bien en las 3 imágenes donde aparece (precisión entre 0,84 y 1,00). El cambio clave fue
-<strong>quitar las muestras atípicas antes de sacar el umbral</strong>: el río pasó de pintar el 97 % de la imagen al 19 %.
-Después sumamos asfalto, techos (concreto, lámina, teja) y vegetación: el asfalto y el concreto salen con precisión de 1,00.</div>
+<div class="caja idea"><span class="t">Resumen</span>
+Usamos la longitud de arco de la firma espectral, el mismo método del cuaderno de asbesto, para encontrar materiales en 4 imágenes de Cartagena.
+El agua se identifica bien en las 3 imágenes donde aparece (precisión de 0,84 a 1,00). El cambio que más ayudó fue quitar las muestras atípicas
+antes de sacar el umbral: el río pasó de pintar el 97 % de la imagen al 19 %. Después sumamos asfalto, techos (concreto, lámina y teja) y vegetación:
+el asfalto y el concreto salen bien y la teja y la vegetación marcan de más.</div>
 
 <h2><span class="num c1">1</span>Objetivo</h2>
-<p>Marcar en cada imagen qué material hay en cada píxel, reconociéndolo por la forma de su firma espectral y midiendo esa forma con la
-longitud de arco. La meta era hacerlo simple: seguir el cuaderno original y cambiar solo lo necesario.</p>
+<p>Saber qué material hay en cada píxel de una imagen, reconociéndolo por la forma de su firma espectral y midiendo esa forma con la longitud de arco.
+Quisimos mantenerlo simple: seguir el cuaderno original y cambiar solo lo necesario.</p>
 
 <h2><span class="num c2">2</span>Los datos</h2>
-<p>4 imágenes hiperespectrales de Cartagena de <strong>750 × 750 píxeles y 380 bandas</strong> (855 MB cada una).</p>
+<p>Son 4 imágenes hiperespectrales de Cartagena de 750 × 750 píxeles y 380 bandas (855 MB cada una).</p>
 <div class="fila cuatro">
-  <figure><img src="img/cartagena1.png" alt="cartagena1"><figcaption><strong>c1</strong> · barrio: techos, árboles, calles</figcaption></figure>
-  <figure><img src="img/cartagena2.png" alt="cartagena2"><figcaption><strong>c2</strong> · contenedores y mar</figcaption></figure>
-  <figure><img src="img/cartagena3.png" alt="cartagena3"><figcaption><strong>c3</strong> · río, laguna y manglar</figcaption></figure>
-  <figure><img src="img/cartagena4.png" alt="cartagena4"><figcaption><strong>c4</strong> · puerto y mar</figcaption></figure>
+  <figure><img src="img/cartagena1.png" alt="cartagena1"><figcaption>c1: barrio con techos, árboles y calles</figcaption></figure>
+  <figure><img src="img/cartagena2.png" alt="cartagena2"><figcaption>c2: contenedores y mar</figcaption></figure>
+  <figure><img src="img/cartagena3.png" alt="cartagena3"><figcaption>c3: río, laguna y manglar</figcaption></figure>
+  <figure><img src="img/cartagena4.png" alt="cartagena4"><figcaption>c4: puerto y mar</figcaption></figure>
 </div>
-<p>Los puntos de muestra que llegaron estaban en archivos sueltos de distintos formatos (txt, csv, xlsx, docx). Los organizamos en una carpeta
-por imagen (<code>imagen/</code>, <code>recuadros/</code>, <code>muestras/</code>, <code>puntos/</code>, <code>originales/</code>), sin borrar ningún original.</p>
+<p>Los puntos de muestra llegaron en archivos sueltos de distintos formatos (txt, csv, xlsx y docx). Los ordenamos en una carpeta por imagen
+(<code>imagen/</code>, <code>recuadros/</code>, <code>muestras/</code>, <code>puntos/</code> y <code>originales/</code>) sin borrar los originales.</p>
 
 <h2><span class="num c3">3</span>El método en corto</h2>
 <div class="flujo">
@@ -43,38 +44,40 @@ por imagen (<code>imagen/</code>, <code>recuadros/</code>, <code>muestras/</code
   <div style="background:var(--ruido)">Umbral = mínimo de muestras limpias</div><span class="f">→</span>
   <div style="background:var(--tinta)">Pintar</div>
 </div>
-<p>Cada píxel se resume en 2 números: cuánto sube y baja su firma en 2 tramos de bandas, <code>L = Σ |R(i+1) − R(i)|</code>.
-Se compara con los 2 números de la firma promedio del material (<code>similitud = 100·(1 − |A−B| / (|A|+|B|))</code>) y se pinta si
-llega al umbral. El paso a paso completo, con figuras, está en el documento <strong>“Cómo reconocemos materiales con la longitud de arco”</strong>.</p>
+<p>Cada píxel se resume en 2 números: cuánto sube y baja su firma en 2 tramos de bandas, <code>L = Σ |R(i+1) − R(i)|</code>. Los comparamos con los
+2 números de la firma promedio del material (<code>similitud = 100·(1 − |A−B| / (|A|+|B|))</code>) y pintamos el píxel si llega al umbral.
+El paso a paso, con figuras, está en el documento "Cómo reconocemos materiales con la longitud de arco".</p>
+<p>Medidas que usamos: la <strong>exactitud</strong> son los aciertos sobre el total, la <strong>precisión</strong> es, de lo que pintamos, cuánto era del material,
+y la <strong>sensibilidad</strong> es, de lo que era del material, cuánto pintamos.</p>
 
 <h2><span class="num c4">4</span>Cómo trabajamos</h2>
 <table>
   <tr><th>Herramienta</th><th>Para qué</th></tr>
-  <tr><td><code>generar_notebooks.py</code></td><td>Arma un notebook por imagen con todo el método, igual al cuaderno original. Para el agua lee recuadros;
-      con <code>--muestras</code> lee los materiales nuevos y los compara entre sí.</td></tr>
+  <tr><td><code>generar_notebooks.py</code></td><td>Arma un notebook por imagen con el método del cuaderno original. Para el agua lee recuadros; con <code>--muestras</code> lee los materiales nuevos y los compara entre sí.</td></tr>
   <tr><td><code>marcar_recuadros.py</code></td><td>Marcar recuadros de muestra con el mouse sobre la imagen (OpenCV).</td></tr>
-  <tr><td>ImageJ</td><td>Marcar a mano los píxeles de los materiales nuevos y exportarlos en CSV (<code>x,y</code>).</td></tr>
-  <tr><td>Repositorio en GitHub</td><td>Trabajo en equipo: cada uno sube sus muestras en su rama y se revisan antes de unirlas.</td></tr>
+  <tr><td>ImageJ</td><td>Marcar los píxeles de los materiales nuevos y exportarlos en CSV (<code>x,y</code>).</td></tr>
+  <tr><td>GitHub</td><td>Guardamos el trabajo en <code>github.com/ManuelAmell/Imagenes-Espectrales</code>. Samuel subió sus muestras en su propia rama y después se unieron.</td></tr>
 </table>
 
 <h2><span class="num c5">5</span>Lo que hicimos, etapa por etapa</h2>
 
-<h3>Etapa 1 · Primera prueba con los puntos que teníamos</h3>
-<p>Aplicamos el método a todos los materiales con los puntos de muestra que llegaron.</p>
+<h3>Etapa 1: primera prueba con los puntos que teníamos</h3>
+<p>Aplicamos el método a todos los materiales con los puntos que llegaron. En esta etapa solo mirábamos la exactitud.
+Esos notebooks ya no están en el proyecto, porque después cambiamos la forma de tomar las muestras.</p>
 <table>
-  <tr><th>Imagen</th><th>Material</th><th>Accuracy</th><th>% de la imagen marcado</th><th>Cómo se veía</th></tr>
-  <tr><td>c4</td><td><span class="mat agua">Agua salada</span></td><td class="n">0,86</td><td class="n">39 %</td><td class="sube">Bien</td></tr>
-  <tr><td>c2</td><td><span class="mat agua">Agua salada</span></td><td class="n">0,75</td><td class="n">58 %</td><td class="sube">Bien</td></tr>
-  <tr><td>c3</td><td><span class="mat agua">Agua dulce</span></td><td class="n">0,95</td><td class="n">31 %</td><td class="sube">Bien</td></tr>
+  <tr><th>Imagen</th><th>Material</th><th>Exactitud</th><th>% de la imagen marcado</th><th>Cómo se veía</th></tr>
+  <tr><td>c4</td><td><span class="mat agua">Agua salada</span></td><td class="n">0,86</td><td class="n">39 %</td><td>Bien</td></tr>
+  <tr><td>c2</td><td><span class="mat agua">Agua salada</span></td><td class="n">0,75</td><td class="n">58 %</td><td>Bien</td></tr>
+  <tr><td>c3</td><td><span class="mat agua">Agua dulce</span></td><td class="n">0,95</td><td class="n">31 %</td><td>Bien</td></tr>
   <tr><td>c3</td><td><span class="mat vegetacion">Vegetación</span></td><td class="n">0,50</td><td class="n">69 %</td><td>También marcaba los barrios</td></tr>
   <tr><td>c2</td><td>Contenedores</td><td class="n">0,67</td><td class="n">39 %</td><td>Zonas mezcladas</td></tr>
   <tr><td>c4</td><td>Contenedores</td><td class="n">0,60</td><td class="n">58 %</td><td class="baja">Marcaba toda la tierra</td></tr>
   <tr><td>c1</td><td>Techos no metálicos</td><td class="n">0,69</td><td class="n">99 %</td><td class="baja">Marcaba casi toda la imagen</td></tr>
 </table>
-<p><strong>Decisión:</strong> quedarnos con lo que pasaba de 0,7, que era solo el agua, y entender por qué fallaba lo demás.</p>
+<p>Solo el agua pasó de 0,7, así que nos quedamos con ella y buscamos por qué fallaba lo demás.</p>
 
-<h3>Etapa 2 · Muestras limpias marcadas a mano</h3>
-<p>Revisando, vimos que varios puntos de “agua” caían en tierra. Marcamos a mano recuadros donde seguro había agua (y otros donde seguro no).</p>
+<h3>Etapa 2: muestras limpias marcadas a mano</h3>
+<p>Vimos que varios puntos de "agua" caían en tierra. Marcamos a mano recuadros donde seguro había agua, y otros donde seguro no.</p>
 <table>
   <tr><th>Imagen</th><th>Material</th><th>Precisión</th><th>% marcado</th></tr>
   <tr><td>c4</td><td><span class="mat agua">Agua salada</span></td><td class="n">0,98</td><td class="n">42 %</td></tr>
@@ -82,35 +85,33 @@ llega al umbral. El paso a paso completo, con figuras, está en el documento <st
   <tr><td>c3</td><td><span class="mat agua">Río</span></td><td class="n baja">0,50</td><td class="n baja">97 %</td></tr>
   <tr><td>c2</td><td><span class="mat agua">Agua salada</span></td><td class="n baja">0,53</td><td class="n baja">88 %</td></tr>
 </table>
-<div class="caja mal"><span class="t">El problema que encontramos</span>
-Entre el 1 % y el 5 % de los píxeles de agua tienen ruido (brillo del sol, olas, bordes). El umbral es la similitud <strong>mínima</strong> de las
-muestras, así que basta uno de esos píxeles para que el umbral caiga (en el río, a 26 %) y casi toda la imagen pase. Suavizar la firma no lo arregló.</div>
+<div class="caja mal"><span class="t">El problema</span>
+Entre el 1 % y el 5 % de las muestras de agua (de 2 a 10 de cada 200) tienen ruido: brillo del sol, olas o bordes. El umbral es la similitud mínima de las muestras,
+así que basta una de esas para que el umbral caiga (en el río, a 20 %) y casi toda la imagen pase. Probamos suavizar la firma y no sirvió.</div>
 
-<h3>Etapa 3 · Quitar las muestras atípicas antes del umbral</h3>
-<p>Antes de tomar el mínimo, descartamos las muestras cuya similitud queda por debajo de <strong>Q1 − 1,5·(Q3 − Q1)</strong> (la regla del
-diagrama de caja). Si no hay ruido no se quita nada; el umbral sigue siendo el mínimo, pero de muestras limpias.</p>
-<figure><img src="img/fig_caja.png" alt="Diagrama de caja del río"><figcaption>Río de c3: 3 de 200 muestras quedan fuera y el mínimo sube de 26,4 % a 76,0 %.</figcaption></figure>
+<h3>Etapa 3: quitar las muestras atípicas antes del umbral</h3>
+<p>Antes de tomar el mínimo descartamos las muestras cuya similitud queda por debajo de Q1 − 1,5·(Q3 − Q1), la regla del diagrama de caja. Si no hay ruido no se
+quita nada. El umbral sigue siendo el mínimo, pero de muestras limpias.</p>
+<figure><img src="img/fig_caja.png" alt="Diagrama de caja del río"><figcaption>Río de c3: 2 de 200 muestras quedan fuera y el mínimo sube de 20,1 % a 73,1 %.</figcaption></figure>
 <table>
-  <tr><th>Imagen</th><th>Material</th><th>Precisión antes → después</th><th>% marcado antes → después</th></tr>
-  <tr><td>c3</td><td><span class="mat agua">Río</span></td><td class="n">0,50 → <span class="sube">1,00</span></td><td class="n">97 % → <span class="sube">19 %</span></td></tr>
-  <tr><td>c2</td><td><span class="mat agua">Agua salada</span></td><td class="n">0,53 → <span class="sube">0,84</span></td><td class="n">88 % → <span class="sube">49 %</span></td></tr>
-  <tr><td>c3</td><td><span class="mat agua">Laguna café</span></td><td class="n">0,94 → <span class="sube">0,98</span></td><td class="n">27 % → 11 %</td></tr>
-  <tr><td>c4</td><td><span class="mat agua">Agua salada</span></td><td class="n">0,98 → <span class="sube">1,00</span></td><td class="n">42 % → 39 %</td></tr>
+  <tr><th>Imagen</th><th>Material</th><th>Precisión antes y después</th><th>% marcado antes y después</th></tr>
+  <tr><td>c3</td><td><span class="mat agua">Río</span></td><td class="n">0,50 y <span class="sube">1,00</span></td><td class="n">97 % y <span class="sube">19 %</span></td></tr>
+  <tr><td>c2</td><td><span class="mat agua">Agua salada</span></td><td class="n">0,53 y <span class="sube">0,84</span></td><td class="n">88 % y <span class="sube">49 %</span></td></tr>
+  <tr><td>c3</td><td><span class="mat agua">Laguna café</span></td><td class="n">0,94 y <span class="sube">0,98</span></td><td class="n">27 % y 11 %</td></tr>
+  <tr><td>c4</td><td><span class="mat agua">Agua salada</span></td><td class="n">0,98 y <span class="sube">1,00</span></td><td class="n">42 % y 39 %</td></tr>
 </table>
 <div class="fila tres">
-  <figure><img src="img/despues_c3_agua_dulce.png" alt="c3 después"><figcaption>c3 · río y laguna</figcaption></figure>
-  <figure><img src="img/despues_c2_agua_salada.png" alt="c2 después"><figcaption>c2 · mar (quedan manchas en contenedores)</figcaption></figure>
-  <figure><img src="img/despues_c4_agua_salada.png" alt="c4 después"><figcaption>c4 · mar</figcaption></figure>
+  <figure><img src="img/despues_c3_agua_dulce.png" alt="c3 después"><figcaption>c3: río y laguna</figcaption></figure>
+  <figure><img src="img/despues_c2_agua_salada.png" alt="c2 después"><figcaption>c2: mar, con manchas en los contenedores</figcaption></figure>
+  <figure><img src="img/despues_c4_agua_salada.png" alt="c4 después"><figcaption>c4: mar</figcaption></figure>
 </div>
-<div class="caja ojo"><span class="t">¿Por qué antes el agua “se veía” mejor?</span>
-Con el umbral bajo de antes, el agua salía de un color parejo porque pasaba <strong>todo</strong>: también los píxeles con olas y brillo… y la tierra
-(el río pintaba el 97 % de la imagen). Ahora el umbral es más exigente: casi no se pinta tierra, pero algunos píxeles de agua con olas o reflejos
-quedan sin pintar y se ven como puntitos (recall de 1,00 a 0,92–0,98). Se ve menos “lleno”, pero es más correcto.</div>
+<p>Antes el agua parecía mejor porque con el umbral bajo pasaba todo: también los píxeles con olas y brillo, y la tierra (el río pintaba el 97 % de la imagen).
+Ahora el umbral es más exigente y casi no se pinta tierra, pero algunos píxeles de agua con olas o reflejos quedan sin pintar y se ven como puntos
+(la sensibilidad baja de 1,00 a entre 0,92 y 0,98). Se ve menos lleno, pero tiene menos errores.</p>
 
-<h3>Etapa 4 · Más materiales</h3>
-<p>Empezamos de cero con muestras nuevas, marcadas a mano en ImageJ, de asfalto, techos (lámina, teja, concreto) y vegetación.
-Como no hay un “otros” para cada material, <strong>cada material se compara contra los demás de la misma imagen</strong>, y al final cada píxel se
-pinta con el material más parecido. Resultados (con la limpieza de atípicas):</p>
+<h3>Etapa 4: más materiales</h3>
+<p>Con muestras nuevas, marcadas en ImageJ, sumamos asfalto, techos (lámina, teja y concreto) y vegetación. Como no hay un "otros" para cada material,
+cada uno se compara con los demás de su imagen, y al final cada píxel se pinta con el material más parecido. Resultados, ya con la limpieza de atípicas:</p>
 <table>
   <tr><th>Imagen</th><th>Material</th><th>Precisión</th><th>% marcado</th></tr>
   <tr><td>c1</td><td><span class="mat asfalto">Asfalto</span></td><td class="n">1,00</td><td class="n">17 %</td></tr>
@@ -125,52 +126,49 @@ pinta con el material más parecido. Resultados (con la limpieza de atípicas):<
   <tr><td>c4</td><td><span class="mat vegetacion">Vegetación</span></td><td class="n baja">0,56</td><td class="n">16 %</td></tr>
 </table>
 <div class="fila tres">
-  <figure><img src="img/cartagena1_materiales_final.png" alt="Mapa c1"><figcaption>c1 · <span style="color:#d00">asfalto</span>, <span style="color:#b8a000">concreto</span>,
+  <figure><img src="img/cartagena1_materiales_final.png" alt="Mapa c1"><figcaption>c1: <span style="color:#d00">asfalto</span>, <span style="color:#b8a000">concreto</span>,
     <span style="color:#0a0">lámina</span>, <span style="color:#e07000">teja</span>, <span style="color:#7000e0">vegetación</span></figcaption></figure>
-  <figure><img src="img/cartagena3_materiales_final.png" alt="Mapa c3"><figcaption>c3 · <span style="color:#d00">asfalto</span>, <span style="color:#b8a000">vegetación</span></figcaption></figure>
-  <figure><img src="img/cartagena4_materiales_final.png" alt="Mapa c4"><figcaption>c4 · <span style="color:#d00">asfalto</span>, <span style="color:#b8a000">concreto</span>, <span style="color:#0a0">vegetación</span></figcaption></figure>
+  <figure><img src="img/cartagena3_materiales_final.png" alt="Mapa c3"><figcaption>c3: <span style="color:#d00">asfalto</span>, <span style="color:#b8a000">vegetación</span></figcaption></figure>
+  <figure><img src="img/cartagena4_materiales_final.png" alt="Mapa c4"><figcaption>c4: <span style="color:#d00">asfalto</span>, <span style="color:#b8a000">concreto</span>, <span style="color:#0a0">vegetación</span></figcaption></figure>
 </div>
 <div class="caja ojo"><span class="t">Ojo con estos números</span>
-Con pocos materiales por imagen, una precisión de 1,00 dice poco: solo significa que se separa bien de los otros 1–4 materiales marcados.
+Con pocos materiales por imagen, una precisión de 1,00 solo dice que el material se separa bien de los otros 1 a 4 materiales marcados.
 Lo que no se marcó se pinta como el material más parecido: en c3 las bodegas salen como vegetación y parte del río como asfalto.
-Asbesto, tierra y contenedores no se alcanzaron a marcar, y c2 quedó solo con asfalto (no se puede comparar contra nada).</div>
+No alcanzamos a marcar asbesto, tierra ni contenedores, y c2 quedó solo con asfalto, así que no tiene mapa de materiales.</div>
 
 <h2><span class="num c6">6</span>Por qué se equivoca</h2>
-<p>Medimos qué porcentaje de los píxeles de cada material pasa el umbral de otro (<code>herramientas/analizar_confusiones.py</code>).
-Los errores tienen 5 causas:</p>
+<p>Medimos qué porcentaje de los píxeles de cada material pasa el umbral de otro material (<code>herramientas/analizar_confusiones.py</code>).
+Encontramos 4 causas:</p>
 <table>
-  <tr><th>Causa</th><th>Ejemplo medido</th><th>Por qué pasa</th></tr>
-  <tr><td><strong>Mira la forma, no el brillo</strong></td><td>c1: el 100 % de la lámina pasa como teja y el 52 % como vegetación</td>
-      <td>Las 3 suben y bajan parecido (longitudes de arco cercanas) aunque su brillo es muy distinto (0,31 · 0,27 · 0,17), y el brillo no se usa</td></tr>
-  <tr><td><strong>Oscuro y plano</strong></td><td>c3: 18 % de una zona del río como asfalto; c4: 13 % del mar con brillo</td>
-      <td>Agua y asfalto tienen curvas casi planas: sus longitudes de arco son muy pequeñas y parecidas</td></tr>
-  <tr><td><strong>Muestras variadas → umbral bajo</strong></td><td>Teja de c1 (umbral 78, el más bajo) pinta el 30 %; vegetación de c4 (umbral 69) acepta el 98 % del concreto</td>
+  <tr><th>Causa</th><th>Lo que medimos</th><th>Por qué pasa</th></tr>
+  <tr><td><strong>Mira la forma, no el brillo</strong></td><td>En c1, el 100 % de la lámina pasa como teja y el 52 % como vegetación. En c3, el 18 % de una zona del río pasa como asfalto</td>
+      <td>Esos materiales suben y bajan parecido (longitudes de arco cercanas) aunque su brillo es muy distinto (0,31, 0,27 y 0,17), y el brillo no se usa. Agua y asfalto tienen curvas casi planas</td></tr>
+  <tr><td><strong>Muestras variadas, umbral bajo</strong></td><td>La teja de c1 (umbral 78, el más bajo de la imagen) pinta el 30 %. La vegetación de c4 (umbral 69) acepta el 98 % del concreto</td>
       <td>El umbral es la peor muestra limpia: si las muestras son muy distintas entre sí, baja y entran otros materiales</td></tr>
-  <tr><td><strong>Lo que no se marcó</strong></td><td>c4: 64 % de los contenedores como asfalto; c3: 63 % del suelo claro como vegetación</td>
-      <td>El método solo conoce los materiales marcados; lo demás se lo queda el más parecido</td></tr>
-  <tr><td><strong>Métricas optimistas</strong></td><td>Precisión 1,00 en c3 con solo 2 materiales; asfalto de c1 probado con 21 píxeles</td>
-      <td>Cada material solo se compara contra los que se marcaron en su imagen</td></tr>
+  <tr><td><strong>Lo que no se marcó</strong></td><td>En c4, el 64 % de los contenedores pasa como asfalto. En c3, el 63 % del suelo claro como vegetación</td>
+      <td>El método solo conoce los materiales que marcamos; lo demás se lo queda el más parecido</td></tr>
+  <tr><td><strong>Métricas optimistas</strong></td><td>Precisión de 1,00 en c3 con solo 2 materiales; el asfalto de c1 se probó con 21 píxeles</td>
+      <td>Cada material se compara solo con los que se marcaron en su imagen, y con pocas muestras la prueba es pequeña</td></tr>
 </table>
-<figure><img src="img/fig_confusion_c1.png" alt="Mapa de confusiones de c1" style="max-height:95mm"><figcaption>c1: % de cada material (fila) que pasa el umbral de otro (columna).</figcaption></figure>
+<figure><img src="img/fig_confusion_c1.png" alt="Mapa de confusiones de c1" style="max-height:95mm"><figcaption>c1: porcentaje de cada material (fila) que pasa el umbral de otro (columna).</figcaption></figure>
 <figure><img src="img/fig_sin_muestra.png" alt="Zonas sin muestra"><figcaption>Zonas sin muestra propia y el material que se las queda.</figcaption></figure>
-<figure><img src="img/fig_nube_c1.png" alt="Nube de píxeles"><figcaption>c1: con las 2 longitudes de arco, lámina, teja y vegetación se mezclan (izq.); con el brillo se separan (der.).</figcaption></figure>
-<p>Además, <strong>es lento</strong>: pintar recorre los 562.500 píxeles uno por uno, varios minutos por material.</p>
-<div class="caja idea"><span class="t">Cómo se podría mejorar</span>
-Agregar el <strong>brillo</strong> como tercer número junto a las 2 longitudes de arco (separaría lámina, teja y vegetación, y agua de asfalto);
-marcar los materiales que faltan; y separar en dos los materiales muy variados (vegetación al sol y a la sombra) para que su umbral no baje tanto.</div>
+<figure><img src="img/fig_nube_c1.png" alt="Nube de píxeles"><figcaption>c1: con las 2 longitudes de arco, lámina, teja y vegetación se mezclan (izquierda); con el brillo se separan (derecha).</figcaption></figure>
+<p>Además, el pintado es lento porque recorre los 562.500 píxeles uno por uno con bucles de Python.</p>
+<p>Una mejora posible sería usar el brillo como tercer número junto a las 2 longitudes de arco. También ayudaría marcar los materiales que faltan y separar en dos
+los materiales muy variados, por ejemplo vegetación al sol y a la sombra, para que su umbral no baje tanto.</p>
 
 <h2><span class="num c7">7</span>Lo que quedó pendiente</h2>
 <ol>
-  <li>Marcar los materiales que no se alcanzaron: asbesto, tierra, contenedores, lámina y teja en c3 y c4, y un segundo material en c2.</li>
-  <li>Revisar los materiales que siguen marcando de más (teja en c1, vegetación en c4).</li>
-  <li>Opcional: hacer el pintado con numpy de una sola vez (mismo resultado, mucho más rápido).</li>
+  <li>Marcar los materiales que no alcanzamos: asbesto, tierra, contenedores, lámina y teja en c3 y c4, y un segundo material en c2.</li>
+  <li>Revisar los que marcan de más (teja en c1 y vegetación en c4).</li>
+  <li>Probar si el pintado se acelera con numpy.</li>
 </ol>
 
-<h2><span class="num" style="background:var(--ok)">✓</span>Conclusión</h2>
-<p>Resumir la firma de cada píxel en <strong>2 longitudes de arco</strong> basta para separar materiales con formas distintas, siempre que las
-muestras estén limpias. Con un cambio pequeño (quitar las muestras atípicas antes de tomar el mínimo), el agua pasó de fallar a identificarse
-bien en las 3 imágenes, y el asfalto y el concreto también se separan bien. Con más materiales marcados, el mapa de cada imagen quedaría completo.</p>
+<h2><span class="num c1">8</span>Conclusión</h2>
+<p>Resumir la firma de cada píxel en 2 longitudes de arco sirve para separar materiales con formas muy distintas, como el agua, el asfalto y el concreto,
+siempre que las muestras estén limpias. Quitar las muestras atípicas antes de tomar el mínimo fue el cambio que más mejoró el resultado: el agua pasó de fallar a
+identificarse bien en las 3 imágenes. En cambio, materiales parecidos como la lámina, la teja y la vegetación se confunden, porque el método no mira el brillo.</p>
 
-<div class="pie">Números tomados de los notebooks del proyecto (notebooks/cartagenaN.ipynb y cartagenaN_materiales.ipynb).</div>
+<div class="pie">Los números salen de los notebooks del proyecto (notebooks/cartagenaN.ipynb y notebooks/cartagenaN_materiales.ipynb), salvo la etapa 1, que es de la primera prueba.</div>
 </body>
 </html>

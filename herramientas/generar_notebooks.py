@@ -1,17 +1,7 @@
-"""Genera notebooks/cartagena<N>.ipynb a partir de los recuadros marcados.
+"""Arma los notebooks de cada imagen a partir de los CSV de muestras.
 
-Uso (desde la raíz del repo):
-    .venv/bin/python herramientas/generar_notebooks.py <N> [<N> ...]
-    .venv/bin/python herramientas/generar_notebooks.py --muestras <N> [<N> ...]
-
-Sin opciones: cada datos/cartagena<N>/recuadros/<material>.csv (menos otros.csv) es un material
-y sale notebooks/cartagena<N>.ipynb.
-Con --muestras: cada datos/cartagena<N>/muestras/<material>.csv (de ImageJ: un píxel por fila con x,y
-o un rectángulo por fila con BX, BY, Width, Height) es un material y sale notebooks/cartagena<N>_materiales.ipynb.
-Cada material se compara usando la longitud de arco, igual que en referencia/Cuaderno_Asbesto_ArcoV3.ipynb
-(2 tramos de bandas, similitud porcentual y umbral = similitud mínima), contra recuadros/otros.csv
-o, con --muestras, contra los demás materiales de la misma imagen.
-"""
+Uso: .venv/bin/python herramientas/generar_notebooks.py [--muestras] <N> [<N> ...]
+Sin --muestras usa datos/cartagenaN/recuadros/ (agua) y con --muestras usa datos/cartagenaN/muestras/ (materiales)."""
 import glob
 import os
 import sys
@@ -24,6 +14,9 @@ LIMS = (40, 140, 150, 270)
 COLORES = {"agua_salada": (0, 255, 255), "agua_dulce": (255, 0, 255)}
 PALETA = [(255, 0, 0), (255, 255, 0), (0, 255, 0), (255, 128, 0), (128, 0, 255),
           (0, 0, 255), (255, 255, 255), (128, 64, 0), (0, 128, 0), (255, 160, 200)]
+
+NOMBRES = {"techo_concreto": "techo de concreto", "techo_lamina": "techo de lámina", "techo_teja": "techo de teja",
+           "vegetacion": "vegetación", "agua_dulce_rio": "agua dulce (río)", "agua_dulce_laguna": "agua dulce (laguna)"}
 
 md = nbf.v4.new_markdown_cell
 code = nbf.v4.new_code_cell
@@ -38,8 +31,20 @@ def materiales_de(n, carpeta):
         color = next((c for pref, c in COLORES.items() if clave.startswith(pref)), None)
         if color is None:
             color, libre = PALETA[libre % len(PALETA)], libre + 1
-        resultado.append((clave, clave.replace("_", " "), color))
+        resultado.append((clave, NOMBRES.get(clave, clave.replace("_", " ")), color))
     return resultado
+
+
+def dic_colores(materiales):
+    return "{" + ", ".join(f'"{c}":{col}' for c, _, col in materiales) + "}"
+
+
+def dic_nombres(materiales):
+    return "{" + ", ".join(f'"{c}":"{nom}"' for c, nom, _ in materiales) + "}"
+
+
+def lista(nombres):
+    return ", ".join(nombres[:-1]) + " y " + nombres[-1] if len(nombres) > 1 else nombres[0]
 
 
 def tiene_png(n):
@@ -47,13 +52,10 @@ def tiene_png(n):
 
 
 def celdas_lectura(materiales, carpeta):
-    """Celdas que leen los recuadros de cada material (y los de otros) y los dibujan."""
     if carpeta == "recuadros":
         lectura = "\n".join(f"""recuadros["{c}"]=pd.read_csv(ruta+"/recuadros/{c}.csv")""" for c, _, _ in materiales)
         return [
-            md("""# Recuadros de muestra
-Los recuadros (x1, y1, x2, y2) se marcan a mano con `herramientas/marcar_recuadros.py` y se guardan en `datos/cartagenaN/recuadros/`.
-Cada material tiene su archivo, y `otros.csv` tiene lo que seguro **no** es ninguno de los materiales."""),
+            md("Leemos los recuadros (x1, y1, x2, y2) de cada material y los de otros, que son zonas que no son ninguno de los materiales"),
             code(f"""recuadros={{}}
 {lectura}
 recuadros_otros=pd.read_csv(ruta+"/recuadros/otros.csv")
@@ -72,11 +74,8 @@ plt.imshow(img_copy)
 plt.show()"""),
         ]
     lectura = "\n".join(f"""recuadros["{c}"]=leer_imagej(ruta+"/muestras/{c}.csv")""" for c, _, _ in materiales)
-    colores = "{" + ", ".join(f'"{c}":{col}' for c, _, col in materiales) + "}"
     return [
-        md("""# Muestras de los materiales
-Las zonas de cada material se marcan en ImageJ y se guardan en `datos/cartagenaN/muestras/` (ver el README).
-Las pasamos a recuadros (x1, y1, x2, y2). Cada material se compara contra **los demás materiales** de la imagen."""),
+        md("Leemos las muestras de cada material (se marcaron en ImageJ) y las pasamos a recuadros. Cada material se compara con los demás de la imagen"),
         code(f"""def leer_imagej(archivo):
   m=pd.read_csv(archivo)
   if "x" in m.columns:
@@ -90,30 +89,31 @@ recuadros={{}}
 for nombre in recuadros:
   print(nombre, ":", len(recuadros[nombre]), "recuadros")"""),
         md("Dibujamos las muestras de cada material con su color"),
-        code(f"""colores={colores}
+        code(f"""colores={dic_colores(materiales)}
+nombres={dic_nombres(materiales)}
 img_copy=imagen.copy()
 for nombre in recuadros:
   for id,r in recuadros[nombre].iterrows():
     cv2.rectangle(img_copy, (r.x1,r.y1), (r.x2-1,r.y2-1), colores[nombre], 2)
 plt.figure(figsize=(8, 8))
 plt.imshow(img_copy)
-plt.legend(handles=[mpatches.Patch(color=np.array(colores[m])/255, label=m.replace("_"," ")) for m in colores], loc="upper right")
+plt.legend(handles=[mpatches.Patch(color=np.array(colores[m])/255, label=nombres[m]) for m in colores], loc="upper right")
 plt.show()"""),
     ]
 
 
-def celdas_inicio(n, materiales, carpeta):
+def celdas_inicio(n, materiales, carpeta, varios):
     if tiene_png(n):
         base = f"""imagen=cv2.cvtColor(cv2.imread(ruta+"/imagen/cartagena{n}.png"), cv2.COLOR_BGR2RGB)"""
     else:
-        base = """#Esta imagen no trae png: la armamos con las bandas (29, 50, 70), las mismas del original
+        base = """#Esta imagen no trae png: la armamos con las bandas 29, 50 y 70, como en el cuaderno original
 imagen=(get_rgb(img,(29,50,70))*255).astype(np.uint8)"""
+    leyenda = carpeta == "muestras" or varios
     return [
         md("Importamos librerías"),
         code("""from spectral import *
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import numpy as np
+""" + ("import matplotlib.patches as mpatches\n" if leyenda else "") + """import numpy as np
 import pandas as pd
 import cv2
 from sklearn.model_selection import train_test_split
@@ -129,11 +129,11 @@ from sklearn.metrics import (
 img=open_image(ruta+"/imagen/cartagena{n}.hdr")
 arr=np.asarray(img.load())
 arr.shape"""),
-        md("Normalizamos el arreglo con la imagen"),
+        md("Normalizamos la imagen"),
         code("""maximo=np.max(arr)
 minimo=np.min(arr)
 arr_norm=(arr-minimo)/(maximo-minimo)"""),
-        md("Marcamos los píxeles que sí tienen datos. Las zonas negras de la imagen están en cero en todas las bandas y no se deben usar ni pintar"),
+        md("Marcamos los píxeles con datos (las zonas negras están en cero y no se usan)"),
         code("""con_datos=np.max(arr,axis=2)>0
 print("Píxeles sin datos:", np.sum(~con_datos))"""),
         md("Imagen base para dibujar"),
@@ -141,7 +141,7 @@ print("Píxeles sin datos:", np.sum(~con_datos))"""),
 plt.figure(figsize=(8, 8))
 plt.imshow(imagen)
 plt.show()"""),
-        md("Definimos la función de longitud de arco y el método de similitud (iguales al original)"),
+        md("Definimos la longitud de arco y la similitud porcentual, como en el cuaderno original"),
         code("""def long_arco(R):
   return np.sum(np.abs(np.diff(R)))
 
@@ -151,7 +151,7 @@ def similitud_porcentual(A, B):
   sims = 100 * (1 - np.abs(A - B) / (np.abs(A) + np.abs(B) + 1e-9))
   return np.mean(sims)"""),
     ] + celdas_lectura(materiales, carpeta) + [
-        md("Función para sacar los píxeles (con datos) que hay dentro de unos recuadros"),
+        md("Función para sacar los píxeles con datos que hay dentro de unos recuadros"),
         code("""def pixeles_de(rec):
   l_pix=[]
   for id,r in rec.iterrows():
@@ -163,7 +163,7 @@ def similitud_porcentual(A, B):
     ]
 
 
-def celdas_material(n, k, clave, nombre, color, carpeta):
+def celdas_material(n, k, clave, nombre, color, carpeta, varios):
     a, b, c, d = LIMS
     if carpeta == "recuadros":
         otros, de_otros = "otros", "pixeles_de(recuadros_otros)"
@@ -172,7 +172,7 @@ def celdas_material(n, k, clave, nombre, color, carpeta):
         de_otros = f"""pixeles_de(pd.concat([recuadros[m] for m in recuadros if m!="{clave}"]))"""
     return [
         md(f"# Material {k}: {nombre}"),
-        md(f"Sacamos los píxeles de los recuadros: {nombre} (si) y {otros} (no). Tomamos 250 de cada uno al azar, como en el original"),
+        md(f"Sacamos los píxeles de {nombre} (sí) y de {otros} (no) y tomamos hasta 250 de cada uno al azar"),
         code(f"""df_si=pixeles_de(recuadros["{clave}"])
 df_no={de_otros}
 print("Píxeles de {nombre}:", len(df_si), " otros:", len(df_no))
@@ -181,7 +181,7 @@ df_no=df_no.sample(n=min(250,len(df_no)),random_state=42)
 punt_si=df_si[["x","y"]].astype(int).to_numpy()
 punt_no=df_no[["x","y"]].astype(int).to_numpy()
 print("Usados:", len(punt_si), len(punt_no))"""),
-        md(f"Dibujamos los puntos sobre la imagen (rojo = {nombre}, azul = otros)"),
+        md(f"Dibujamos los puntos (rojo = {nombre}, azul = {otros})"),
         code("""img_copy=imagen.copy()
 for (x, y) in punt_si:
     cv2.circle(img_copy, (x, y), 1, (255, 0, 0), 2)
@@ -208,7 +208,7 @@ for ax, (lista, titulo) in zip(axes, [(l_pix_si, "Firmas de {nombre}"), (l_pix_n
     ax.grid(True)
 plt.tight_layout()
 plt.show()"""),
-        md(f"Creamos el dataset (1 = {nombre}, 0 = otro), lo desordenamos y lo partimos en entrenamiento y prueba"),
+        md(f"Armamos el dataset (1 = {nombre}, 0 = {otros}), lo desordenamos y lo partimos en entrenamiento (80 %) y prueba (20 %)"),
         code("""firmas=np.concatenate([l_pix_si, l_pix_no])
 etiquetas=[1]*len(l_pix_si) + [0]*len(l_pix_no)
 df=pd.DataFrame(firmas)
@@ -222,7 +222,7 @@ df_train, df_test = train_test_split(
     random_state=42
 )
 df_train.shape"""),
-        md("Calculamos el pixel promedio (mediana) del material y de los otros"),
+        md("Calculamos el píxel promedio (la mediana) de cada grupo"),
         code(f"""firm_si_train=df_train[df_train['label']==1].drop(columns='label').to_numpy()
 firm_no_train=df_train[df_train['label']==0].drop(columns='label').to_numpy()
 pix_prom_train=np.median(firm_si_train, axis=0)
@@ -234,7 +234,7 @@ plt.ylabel("Reflectancia normalizada")
 plt.legend()
 plt.grid()
 plt.show()"""),
-        md("Longitud de arco por tramos de 55 bandas, para ver en qué tramos se diferencian más"),
+        md("Medimos la longitud de arco cada 55 bandas para ver en qué tramos se diferencian"),
         code(f"""for i in range(55,381,55):
   s_si=long_arco(pix_prom_train[i-55:i])
   s_no=long_arco(pix_prom_no[i-55:i])
@@ -248,7 +248,7 @@ plt.ylabel("Longitud de arco")
 plt.legend()
 plt.grid()
 plt.show()"""),
-        md("Definimos los límites de los 2 tramos y la longitud de arco del pixel promedio"),
+        md("Definimos los 2 tramos de bandas y la longitud de arco del píxel promedio"),
         code(f"""lim1={a}
 lim2={b}
 lim3={c}
@@ -257,9 +257,8 @@ s1=long_arco(pix_prom_train[lim1:lim2])
 s2=long_arco(pix_prom_train[lim3:lim4])
 arr_s_prom=np.asarray([s1,s2])
 print(arr_s_prom)"""),
-        md("""Probamos con las firmas del material para sacar el umbral (la similitud mínima, como en el original).
-Antes quitamos las muestras atípicas: píxeles con ruido (brillos, olas, bordes) que quedan muy por debajo del resto.
-Usamos la regla del diagrama de caja: es atípica si su similitud es menor que Q1 - 1.5·(Q3 - Q1). Si no hay ruido, no se quita nada."""),
+        md("""Sacamos el umbral con las firmas del material. Antes quitamos las muestras atípicas (ruido de brillos, olas o bordes):
+las que quedan por debajo de Q1 - 1,5·(Q3 - Q1) en el diagrama de caja. El umbral es la similitud mínima de las que quedan"""),
         code("""l_arc_si=[]
 for id,row in df_train.iterrows():
   if(row['label']==1):
@@ -273,7 +272,7 @@ q1,q3=np.percentile(l_arc_si,[25,75])
 limite=q1-1.5*(q3-q1)
 limpias=[s for s in l_arc_si if s>=limite]
 print("Muestras atípicas quitadas:", len(l_arc_si)-len(limpias), "de", len(l_arc_si))
-plt.boxplot(l_arc_si, vert=False)
+plt.boxplot(l_arc_si, orientation="horizontal")
 plt.axvline(limite, color="red", linestyle="--", label="límite de atípicas")
 plt.xlabel("Similitud con la firma promedio (%)")
 plt.legend()
@@ -281,7 +280,7 @@ plt.show()
 umbral=round(np.min(limpias),3)
 print("Min", umbral)
 print("Max", round(np.max(l_arc_si),3))"""),
-        md("Probamos con las firmas de otros materiales"),
+        md(f"Probamos con las firmas de {otros}"),
         code("""l_arc_no=[]
 cont=0
 for id,row in df_train.iterrows():
@@ -297,7 +296,7 @@ for id,row in df_train.iterrows():
 print("Otros bien separados:", cont, "de", len(l_arc_no))
 print("Min", round(np.min(l_arc_no),3))
 print("Max", round(np.max(l_arc_no),3))"""),
-        md("Probamos el método con el conjunto de prueba y calculamos las métricas"),
+        md("Probamos con el conjunto de prueba y calculamos las métricas"),
         code("""predicciones=[]
 for id,row in df_test.iterrows():
   pix=np.asarray(row[0:380])
@@ -319,7 +318,7 @@ print("Recall   :", round(recall_score(y_true, y_pred),3))
 print("F1-score :", round(f1_score(y_true, y_pred),3))
 print("\\nMatriz de confusión:")
 print(confusion_matrix(y_true, y_pred))"""),
-        md("Desplegamos el método sobre la imagen. Guardamos la similitud de cada píxel en `mapa` para usarla al final"),
+        md("Pintamos la imagen con el método" + (" y guardamos la similitud de cada píxel en `mapa` para el mapa final" if varios else "")),
         code(f"""img_marcada=imagen.copy()
 tam=arr_norm.shape
 mapa=np.zeros((tam[0],tam[1]))
@@ -347,20 +346,19 @@ axes[0].set_title("Original")
 axes[1].imshow(img_marcada)
 axes[1].set_title("{nombre.capitalize()}")
 plt.show()
-plt.imsave("../resultados/cartagena{n}_{clave}.png", img_marcada)
+plt.imsave("../resultados/cartagena{n}_{clave}.png", img_marcada)""" + (f"""
 
 #Guardamos lo de este material para la imagen final
 mapas["{clave}"]=mapa
-umbrales["{clave}"]=umbral"""),
+umbrales["{clave}"]=umbral""" if varios else "")),
     ]
 
 
 def celdas_final(n, materiales, sufijo):
-    colores = "{" + ", ".join(f'"{c}":{col}' for c, _, col in materiales) + "}"
     return [
-        md("# Imagen final con todos los materiales"),
-        md("Si un píxel pasa el umbral de varios materiales, gana el más parecido (el de mayor % de similitud)"),
-        code(f"""colores={colores}
+        md("Imagen final con todos los materiales. Si un píxel pasa el umbral de varios, gana el más parecido (el de mayor similitud)"),
+        code(f"""colores={dic_colores(materiales)}
+nombres={dic_nombres(materiales)}
 img_final=imagen.copy()
 mejor_sim=np.zeros(con_datos.shape)
 ganador=np.full(con_datos.shape, "", dtype=object)
@@ -374,7 +372,7 @@ for nombre in mapas:
 
 plt.figure(figsize=(10, 10))
 plt.imshow(img_final)
-plt.legend(handles=[mpatches.Patch(color=np.array(colores[m])/255, label=m.replace("_"," ")) for m in colores], loc="upper right")
+plt.legend(handles=[mpatches.Patch(color=np.array(colores[m])/255, label=nombres[m]) for m in colores], loc="upper right")
 plt.title("Cartagena {n}")
 plt.show()
 plt.imsave("../resultados/cartagena{n}{sufijo}_final.png", img_final)"""),
@@ -382,7 +380,7 @@ plt.imsave("../resultados/cartagena{n}{sufijo}_final.png", img_final)"""),
 
 
 def generar(n, carpeta="recuadros"):
-    # Los notebooks de muestras/ van aparte para no mezclarlos con los de agua
+    # los de materiales van aparte de los de agua
     sufijo = "" if carpeta == "recuadros" else "_materiales"
     materiales = materiales_de(n, carpeta)
     if not materiales:
@@ -394,13 +392,14 @@ def generar(n, carpeta="recuadros"):
     if carpeta == "muestras" and len(materiales) < 2:
         print(f"cartagena{n}: hace falta al menos 2 materiales en muestras/ para compararlos entre sí, se omite")
         return
-    titulo = " y ".join(nom for _, nom, _ in materiales)
-    celdas = [md(f"# Cartagena {n}: {titulo} con longitud de arco")]
-    celdas += celdas_inicio(n, materiales, carpeta)
-    celdas.append(code("#Aquí se guardan los mapas de similitud y umbrales de cada material\nmapas={}\numbrales={}"))
+    varios = len(materiales) > 1
+    celdas = [md(f"# Cartagena {n}: {lista([nom for _, nom, _ in materiales])} con longitud de arco")]
+    celdas += celdas_inicio(n, materiales, carpeta, varios)
+    if varios:
+        celdas.append(code("#Aquí se guardan los mapas de similitud y los umbrales de cada material\nmapas={}\numbrales={}"))
     for k, (clave, nombre, color) in enumerate(materiales, start=1):
-        celdas += celdas_material(n, k, clave, nombre, color, carpeta)
-    if len(materiales) > 1:
+        celdas += celdas_material(n, k, clave, nombre, color, carpeta, varios)
+    if varios:
         celdas += celdas_final(n, materiales, sufijo)
     nb = nbf.v4.new_notebook()
     nb.cells = celdas

@@ -1,20 +1,7 @@
-"""Marca a mano recuadros de un material sobre una imagen y los guarda en CSV.
+"""Marca recuadros de un material sobre la imagen y los guarda en datos/cartagenaN/recuadros/<material>.csv.
 
-Uso (desde la raíz del repo):
-    .venv/bin/python herramientas/marcar_recuadros.py <N> <material>
-
-Ejemplos:
-    .venv/bin/python herramientas/marcar_recuadros.py 4 agua_salada
-    .venv/bin/python herramientas/marcar_recuadros.py 4 otros
-
-Se abre la imagen de cartagena<N>. Los recuadros que ya existen se ven en amarillo.
-- Arrastra con el mouse para dibujar un recuadro y presiona ENTER (o ESPACIO) para guardarlo.
-- Puedes dibujar varios seguidos. Para terminar presiona ESC.
-Los recuadros nuevos se AGREGAN a datos/cartagena<N>/recuadros/<material>.csv
-(columnas x1,y1,x2,y2,nombre), así varias personas pueden ir sumando muestras.
-
-"otros" es el archivo especial con lo que seguro NO es ninguno de los materiales.
-"""
+Uso: .venv/bin/python herramientas/marcar_recuadros.py <N> <material>   (por ejemplo: 4 agua_salada, o 4 otros)
+Arrastra con el mouse y presiona ENTER para guardar cada recuadro; ESC para terminar. Los recuadros nuevos se agregan a los que ya hay."""
 import csv
 import os
 import sys

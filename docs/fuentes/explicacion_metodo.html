@@ -9,7 +9,8 @@
 
 <section class="portada">
   <h1>Cómo reconocemos materiales con la longitud de arco</h1>
-  <p>Del píxel a la imagen pintada: qué hace el notebook en cada paso, con datos reales de Cartagena.</p>
+  <p>Qué hace el notebook en cada paso, del píxel a la imagen pintada, con datos de Cartagena.</p>
+  <p style="margin-top:8px">Manuel Amell y Samuel Cogollo</p>
   <div class="chips"><span>750 × 750 píxeles</span><span>380 bandas por píxel</span><span>2 números por píxel</span><span>1 umbral por material</span></div>
 </section>
 
@@ -25,92 +26,94 @@
   <div style="background:linear-gradient(90deg,var(--agua),var(--vegetacion),var(--concreto))">9 · Mapa final</div>
 </div>
 
-<div class="caja idea"><span class="t">La idea en una frase</span>
-Cada píxel se convierte en <strong>2 números</strong> (cuánto sube y baja su firma en 2 tramos), se compara contra los
-2 números típicos de cada material, y se pinta si se parece <strong>al menos tanto como la peor de las muestras buenas</strong>.</div>
+<div class="caja idea"><span class="t">Resumen</span>
+Cada píxel se convierte en 2 números: cuánto sube y baja su firma en 2 tramos de bandas. Esos números se comparan con los del material,
+y el píxel se pinta si se parece al menos tanto como la peor de las muestras buenas.</div>
 
 <h2><span class="num c7">1</span>Preparar la imagen</h2>
-<p>Una foto normal guarda 3 colores por píxel. Estas imágenes guardan <strong>380 bandas</strong> por píxel: la cantidad de luz que
-refleja en 380 “colores”, muchos invisibles para el ojo.</p>
+<p>Una foto normal guarda 3 colores por píxel (rojo, verde y azul). Estas imágenes guardan 380 bandas: cuánta luz refleja el píxel
+en 380 colores, muchos de los cuales el ojo no ve.</p>
 <pre>arr = np.asarray(img.load())                       <span class="c"># 750 × 750 × 380</span>
 arr_norm = (arr - minimo) / (maximo - minimo)      <span class="c"># todo queda entre 0 y 1</span>
 con_datos = np.max(arr, axis=2) &gt; 0                <span class="c"># zonas negras = sin datos</span></pre>
 <ul>
-  <li><strong>Normalizar</strong> pone todos los valores entre 0 y 1, para poder comparar unos píxeles con otros.</li>
-  <li><strong><code>con_datos</code></strong> marca las zonas negras de la imagen (en cero en todas las bandas): no se usan ni se pintan.</li>
+  <li>Normalizar deja todos los valores entre 0 y 1 para poder comparar unos píxeles con otros.</li>
+  <li><code>con_datos</code> marca las zonas negras de la imagen (en cero en todas las bandas), que no se usan ni se pintan.</li>
 </ul>
 
 <h2><span class="num c2">2</span>Sacar las firmas de las muestras</h2>
-<p>Si se grafican los 380 valores de un píxel sale una curva: su <strong>firma espectral</strong>. Cada material tiene una forma propia
-(ver la figura de abajo).</p>
+<p>Si graficamos los 380 valores de un píxel sale una curva: su firma espectral. Cada material tiene una forma distinta (figura de abajo).</p>
 <ul>
-  <li>Para cada material se leen las zonas marcadas a mano (recuadros, o píxeles <code>x,y</code> marcados en ImageJ) y se juntan los píxeles de adentro.</li>
-  <li>La firma de un píxel es <code>arr_norm[y, x, :]</code> (primero la fila <code>y</code>, luego la columna <code>x</code>).</li>
-  <li>Se toman <strong>250 píxeles del material (sí)</strong> y <strong>250 que no lo son (no)</strong>, al azar. Los “no” salen de
-      <code>otros.csv</code> (agua) o de los demás materiales de la imagen (materiales nuevos).</li>
-  <li>Se mezclan y se separan <strong>80 % para entrenar</strong> y <strong>20 % para probar</strong>.</li>
+  <li>De cada material tomamos las zonas marcadas a mano (recuadros, o píxeles <code>x,y</code> marcados en ImageJ) y juntamos los píxeles de adentro.</li>
+  <li>La firma de un píxel es <code>arr_norm[y, x, :]</code> (primero la fila, luego la columna).</li>
+  <li>Elegimos hasta 250 píxeles del material (sí) y hasta 250 que no son del material (no), al azar. Los "no" salen de <code>otros.csv</code> en el agua
+      y de los demás materiales de la imagen en los materiales nuevos.</li>
+  <li>Los mezclamos y guardamos el 80 % para entrenar y el 20 % para probar.</li>
 </ul>
 <figure><img src="img/fig_firmas.png" alt="Firmas de agua, asfalto, techo de concreto y vegetación">
-<figcaption>Firmas promedio reales de cartagena4. El agua es casi plana; la vegetación da un salto grande (del verde al infrarrojo).
-Las franjas son los 2 tramos donde se mide la longitud de arco.</figcaption></figure>
+<figcaption>Firmas promedio de cartagena4. El agua es casi plana y la vegetación da un salto grande (del verde al infrarrojo).
+Las franjas son los 2 tramos donde medimos la longitud de arco.</figcaption></figure>
 
 <h2><span class="num c3">3</span>La firma promedio</h2>
 <pre>pix_prom_train = np.median(firm_si_train, axis=0)</pre>
-<p>Es la <strong>mediana banda por banda</strong> de las firmas de entrenamiento: la curva “típica” del material.
-Se usa la mediana y no la media porque los píxeles raros la mueven menos.</p>
+<p>Es la mediana banda por banda de las firmas de entrenamiento, la curva típica del material. Usamos la mediana y no la media
+porque los píxeles raros la mueven menos.</p>
 
 <h2><span class="num c1">4</span>La longitud de arco: la curva en 2 números</h2>
 <pre>def long_arco(R):
     return np.sum(np.abs(np.diff(R)))</pre>
 <div class="formula">L = |R₂ − R₁| + |R₃ − R₂| + … = Σ |R(i+1) − R(i)|</div>
-<p>Suma cuánto <strong>sube y baja</strong> la curva de una banda a la siguiente. Una curva plana da un número pequeño;
-una curva que cambia mucho, uno grande.</p>
+<p>Suma cuánto sube y baja la curva de una banda a la siguiente. Una curva plana da un número pequeño y una que cambia mucho da uno grande.</p>
 <figure><img src="img/fig_saltos.png" alt="Saltos entre bandas vecinas"><figcaption>Zoom a 20 bandas de la firma de vegetación.</figcaption></figure>
-<p>No se mide en toda la firma, sino en <strong>2 tramos</strong>: <span style="color:var(--tramo1);font-weight:700">bandas 40–140</span> y
-<span style="color:var(--tramo2);font-weight:700">bandas 150–270</span>. Así <strong>cada píxel queda resumido en 2 números</strong>: <code>[L₁, L₂]</code>.</p>
-<figure><img src="img/fig_longitud_arco.png" alt="Longitud de arco por material y tramo"><figcaption>Longitud de arco de las firmas promedio de cartagena4: con solo 2 números los 4 materiales ya se ven distintos.</figcaption></figure>
+<p>No la medimos en toda la firma sino en 2 tramos: <span style="color:var(--tramo1);font-weight:700">bandas 40–140</span> y
+<span style="color:var(--tramo2);font-weight:700">bandas 150–270</span>. Así cada píxel queda resumido en 2 números, <code>[L₁, L₂]</code>.</p>
+<figure><img src="img/fig_longitud_arco.png" alt="Longitud de arco por material y tramo"><figcaption>Longitud de arco de las firmas promedio de cartagena4: con solo 2 números los 4 materiales ya se distinguen.</figcaption></figure>
 
 <div class="caja ojo"><span class="t">Lo que se pierde</span>
-La longitud de arco mide la <strong>forma</strong> de la curva, no su <strong>altura</strong>. Dos curvas con los mismos subes y bajas,
-una más brillante que otra, dan casi el mismo número. Por eso los materiales oscuros y planos (agua, asfalto, sombras) son los que
-más se confunden: en cartagena3, parte del río salió como asfalto.</div>
+La longitud de arco mide la forma de la curva, no su altura. Dos curvas que suben y bajan igual, una más brillante que la otra, dan casi el mismo número.
+Por eso los materiales oscuros y planos (agua, asfalto, sombras) se confunden más: en cartagena3 parte del río salió como asfalto.</div>
 
-<h2><span class="num c4">5</span>La similitud: ¿qué tanto se parece al promedio?</h2>
+<h2><span class="num c4">5</span>La similitud: qué tanto se parece al promedio</h2>
 <pre>def similitud_porcentual(A, B):
     sims = 100 * (1 - np.abs(A - B) / (np.abs(A) + np.abs(B)))
     return np.mean(sims)</pre>
 <div class="formula">similitud = 100 · ( 1 − |<span class="a">A</span> − <span class="b">B</span>| / ( |<span class="a">A</span>| + |<span class="b">B</span>| ) )</div>
 <p><span class="mat agua">A</span> son los 2 números del píxel y <span class="mat concreto">B</span> los 2 de la firma promedio.
-Se calcula en cada tramo y se <strong>promedia</strong>: 100 % es igual y 0 % es muy distinto.
-Dividir entre <code>|A|+|B|</code> hace la diferencia <strong>relativa</strong>: separarse de 0,03 a 0,06 pesa lo mismo que de 0,3 a 0,6.</p>
+Se calcula en cada tramo y se promedia: 100 % es igual y 0 % es muy distinto. Al dividir entre <code>|A|+|B|</code> la diferencia es relativa:
+pasar de 0,03 a 0,06 pesa lo mismo que pasar de 0,3 a 0,6.</p>
 <table>
-  <tr><th>Ejemplo real: píxel de <span style="color:#7fe3f5">agua</span> frente a la firma de <span style="color:#8ff0b6">vegetación</span></th><th>A (agua)</th><th>B (vegetación)</th><th>Similitud</th></tr>
+  <tr><th>Ejemplo: un píxel de <span style="color:#7fe3f5">agua</span> frente a la firma de <span style="color:#8ff0b6">vegetación</span></th><th>A (agua)</th><th>B (vegetación)</th><th>Similitud</th></tr>
   <tr><td>Tramo 40–140</td><td class="n">0,029</td><td class="n">0,313</td><td class="n">17 %</td></tr>
   <tr><td>Tramo 150–270</td><td class="n">0,017</td><td class="n">0,495</td><td class="n">7 %</td></tr>
-  <tr><td><strong>Promedio</strong></td><td></td><td></td><td class="n"><strong class="baja">12 % → no es vegetación</strong></td></tr>
+  <tr><td><strong>Promedio</strong></td><td></td><td></td><td class="n"><strong class="baja">12 %, no es vegetación</strong></td></tr>
 </table>
 
-<h2><span class="num c6">6</span>El umbral: ¿desde cuánto decimos “es este material”?</h2>
+<h2><span class="num c6">6</span>El umbral: desde cuánto decimos que es el material</h2>
 <ol>
-  <li>Se calcula la similitud de <strong>cada muestra de entrenamiento</strong> del material con su propia firma promedio.</li>
-  <li><strong>Limpieza:</strong> se quitan las muestras atípicas, las que quedan por debajo de <strong>Q1 − 1,5·(Q3 − Q1)</strong>
-      (la regla del diagrama de caja).</li>
-  <li><strong>Umbral = la similitud mínima</strong> de las muestras que quedan.</li>
+  <li>Calculamos la similitud de cada muestra de entrenamiento con la firma promedio de su material.</li>
+  <li>Quitamos las muestras atípicas. En un diagrama de caja, la caja va de Q1 a Q3 (el 25 % y el 75 % de los datos); lo que queda por debajo de
+      <strong>Q1 − 1,5·(Q3 − Q1)</strong> se considera ruido.</li>
+  <li>El umbral es la similitud mínima de las muestras que quedan.</li>
 </ol>
-<p>La lógica: si todas mis muestras buenas se parecen al menos un 76 %, cualquier píxel que se parezca un 76 % o más también es de ese material.</p>
+<p>Si todas las muestras buenas se parecen al menos un 73 %, un píxel con 73 % o más lo tratamos como del mismo material.</p>
 <figure><img src="img/fig_ruido.png" alt="Firma promedio del río frente a una muestra con ruido">
-<figcaption>Una sola muestra con ruido (brillo, ola, borde) tiene una forma muy distinta a la del río.</figcaption></figure>
+<figcaption>Una muestra con ruido (brillo, ola o borde) tiene una forma muy distinta a la del río.</figcaption></figure>
 <figure><img src="img/fig_caja.png" alt="Diagrama de caja de las similitudes del río">
-<figcaption>Ejemplo real del río de cartagena3: Q1 = 83,8 y Q3 = 90,9, así que el límite es 73,3. De 200 muestras, 3 quedan fuera.</figcaption></figure>
+<figcaption>Río de cartagena3: Q1 = 83,3 y Q3 = 90,4, así que el límite es 72,6. De 200 muestras, 2 quedan por debajo (20,1 % y 28,4 %).</figcaption></figure>
 <div class="fila dos">
-  <div class="caja mal"><span class="t">Sin limpiar</span>Mínimo = <strong>26,4 %</strong>. Casi todo pasa el umbral: se pintaba el <strong>97 %</strong> de la imagen.</div>
-  <div class="caja bien"><span class="t">Limpio</span>Mínimo = <strong>76,0 %</strong>. Solo pasa el río: se pinta el <strong>19 %</strong> de la imagen.</div>
+  <div class="caja mal"><span class="t">Sin limpiar</span>El mínimo es 20,1 %. Casi todo pasa el umbral y se pinta el 97 % de la imagen.</div>
+  <div class="caja bien"><span class="t">Limpio</span>El mínimo es 73,1 %. Solo pasa el río y se pinta el 19 % de la imagen.</div>
 </div>
 
 <h2><span class="num c5">7</span>Probar antes de pintar</h2>
-<p>Con el 20 % que se apartó se calcula la similitud de cada firma y se predice “sí” si llega al umbral y “no” si no.
-Comparando con la etiqueta real salen la <strong>accuracy</strong>, la <strong>precisión</strong> y la matriz de confusión.
-Así se sabe si el umbral sirve antes de usarlo en toda la imagen.</p>
+<p>Con el 20 % apartado calculamos la similitud de cada firma y decimos "sí" si llega al umbral y "no" si no llega. Comparando con lo que sabemos
+salen estas medidas (en los notebooks aparecen en inglés):</p>
+<ul>
+  <li><strong>exactitud</strong> (accuracy): aciertos sobre el total;</li>
+  <li><strong>precisión</strong> (precision): de lo que pintamos, cuánto era del material;</li>
+  <li><strong>sensibilidad</strong> (recall): de lo que era del material, cuánto pintamos.</li>
+</ul>
+<p>Así sabemos si el umbral sirve antes de usarlo en toda la imagen.</p>
 
 <h2><span class="num" style="background:var(--tinta)">8</span>El pintado</h2>
 <pre>for i in range(750):                    <span class="c"># filas</span>
@@ -119,40 +122,39 @@ Así se sabe si el umbral sirve antes de usarlo en toda la imagen.</p>
     pix = arr_norm[i][j]                                    <span class="c"># firma del píxel</span>
     s = [long_arco(pix[40:140]), long_arco(pix[150:270])]   <span class="c"># sus 2 números</span>
     sim = similitud_porcentual(arr_s_prom, s)               <span class="c"># contra el promedio</span>
-    mapa[i][j] = sim                                        <span class="c"># se guarda para el final</span>
+    mapa[i][j] = sim                                        <span class="c"># se guarda para el mapa final</span>
     if sim &gt;= umbral:
-      img_marcada[i][j] = color                             <span class="c"># ¡se pinta!</span></pre>
-<p>Se recorren los <strong>562.500 píxeles</strong> uno por uno y a cada uno se le hace lo mismo que a las muestras:
-2 longitudes de arco → similitud con el promedio → comparar con el umbral. Si pasa, se pinta con el color del material.
-El “% marcado” de los resultados es cuántos píxeles pasaron.</p>
+      img_marcada[i][j] = color                             <span class="c"># se pinta</span></pre>
+<p>Recorremos los 562.500 píxeles de la imagen y a cada uno le hacemos lo mismo que a las muestras: 2 longitudes de arco, similitud con el promedio
+y comparación con el umbral. Si pasa, se pinta con el color del material. El porcentaje marcado de los resultados es cuántos píxeles pasaron.</p>
 <div class="fila dos">
   <figure><img src="img/antes_c3_rio.png" alt="Río antes de limpiar"><figcaption>Río de cartagena3 <span class="baja">sin limpiar</span>: 97 % pintado.</figcaption></figure>
-  <figure><img src="img/despues_c3_agua_dulce.png" alt="Río y laguna después de limpiar"><figcaption>Río y laguna <span class="sube">con limpieza</span>: solo el agua.</figcaption></figure>
+  <figure><img src="img/despues_c3_agua_dulce.png" alt="Río y laguna después de limpiar"><figcaption>Río y laguna <span class="sube">con la limpieza</span>: casi solo el agua.</figcaption></figure>
 </div>
 
 <h2><span class="num" style="background:linear-gradient(135deg,var(--agua),var(--vegetacion))">9</span>El mapa final con varios materiales</h2>
 <p>Cada material deja su <code>mapa</code> de similitudes y su <code>umbral</code>. Para cada píxel:</p>
 <ul>
-  <li>si <strong>no pasa ningún</strong> umbral, se queda con su color original;</li>
-  <li>si <strong>pasa uno</strong>, se pinta con ese material;</li>
-  <li>si <strong>pasa varios</strong>, gana el <strong>más parecido</strong> (el de mayor similitud).</li>
+  <li>si no pasa ningún umbral, se queda con su color original;</li>
+  <li>si pasa uno, se pinta con ese material;</li>
+  <li>si pasa varios, gana el más parecido (el de mayor similitud).</li>
 </ul>
 <div class="fila dos">
   <figure><img src="img/cartagena1.png" alt="cartagena1 original"><figcaption>cartagena1 original.</figcaption></figure>
   <figure><img src="img/cartagena1_materiales_final.png" alt="Mapa de materiales de cartagena1">
-  <figcaption><span class="punto" style="background:#ff0000"></span>asfalto <span class="punto" style="background:#ffff00"></span>techo concreto
-  <span class="punto" style="background:#00ff00"></span>techo lámina <span class="punto" style="background:#ff8000"></span>techo teja
+  <figcaption><span class="punto" style="background:#ff0000"></span>asfalto <span class="punto" style="background:#ffff00"></span>techo de concreto
+  <span class="punto" style="background:#00ff00"></span>techo de lámina <span class="punto" style="background:#ff8000"></span>techo de teja
   <span class="punto" style="background:#8000ff"></span>vegetación.</figcaption></figure>
 </div>
 
-<h2><span class="num c6">10</span>¿Por qué se equivoca?</h2>
-<p>Los errores no son al azar: tienen causas que se pueden medir. Repetimos el método con las muestras y contamos
-<strong>qué porcentaje de los píxeles de cada material pasa el umbral de otro material</strong>
-(<code>herramientas/analizar_confusiones.py</code>).</p>
+<h2><span class="num c6">10</span>Por qué se equivoca</h2>
+<p>Los errores tienen causas que se pueden medir: repetimos el método y contamos qué porcentaje de los píxeles de cada material pasa el umbral
+de otro material. La tabla completa está en el reporte. Estas son las causas principales.</p>
 
-<h3>1 · Mira la forma de la curva, no su brillo</h3>
-<p>Es la causa principal. La longitud de arco solo cuenta cuánto <strong>sube y baja</strong> la firma; dos materiales con subidas
-parecidas quedan con números parecidos aunque uno sea mucho más brillante que el otro.</p>
+<h3>Mira la forma de la curva, no su brillo</h3>
+<p>Dos materiales que suben y bajan parecido quedan con números parecidos aunque uno sea mucho más brillante. En cartagena1, el 100 % de los píxeles
+de techo de lámina pasa el umbral del techo de teja y el 52 % el de la vegetación, pero su brillo es muy distinto. El asfalto y el concreto no se
+confunden con nada porque su forma es única.</p>
 <table>
   <tr><th>cartagena1</th><th>L tramo 1</th><th>L tramo 2</th><th>Brillo</th><th>Umbral</th></tr>
   <tr><td><span class="punto" style="background:#3d7bfd"></span>Techo de lámina</td><td class="n">0,19</td><td class="n">0,49</td><td class="n">0,31</td><td class="n">90</td></tr>
@@ -162,51 +164,23 @@ parecidas quedan con números parecidos aunque uno sea mucho más brillante que 
   <tr><td><span class="punto" style="background:#f2a516"></span>Techo de concreto</td><td class="n">0,06</td><td class="n">0,29</td><td class="n">0,19</td><td class="n">91</td></tr>
 </table>
 <figure><img src="img/fig_nube_c1.png" alt="Nube de píxeles por longitud de arco y brillo">
-<figcaption>Cada punto es un píxel de muestra de cartagena1. A la izquierda, lo que usa el método: lámina, teja y vegetación caen en la
-misma zona. A la derecha, el brillo: ahí sí quedan separados, pero el método no lo usa.</figcaption></figure>
-<figure><img src="img/fig_confusion_c1.png" alt="Mapa de confusiones de cartagena1" style="max-height:95mm">
-<figcaption>Cómo se lee: de los píxeles de <strong>lámina</strong>, el 100 % pasa el umbral de <strong>teja</strong> y el 52 % el de <strong>vegetación</strong>.
-Asfalto y concreto no se confunden con nada (0 %): su forma es única.</figcaption></figure>
-<p>Lo mismo pasa con lo <strong>oscuro y plano</strong>: el agua y el asfalto tienen curvas casi planas. En cartagena3, el 18 % de una zona del río
-pasa como asfalto, y en cartagena4 el 13 % del mar con brillo del sol.</p>
+<figcaption>Cada punto es un píxel de muestra de cartagena1. A la izquierda, lo que usa el método: lámina, teja y vegetación se mezclan.
+A la derecha, el brillo, que sí los separa pero el método no usa.</figcaption></figure>
 
-<h3>2 · Muestras muy variadas → umbral bajo → acepta de más</h3>
-<p>El umbral es la similitud de la <strong>peor</strong> muestra limpia. Si las muestras de un material son muy distintas entre sí, esa peor muestra
-se parece poco al promedio y el umbral queda bajo: entonces entran otros materiales.</p>
-<ul>
-  <li><strong>Teja (c1):</strong> sus muestras están muy dispersas (ver la nube: tejas más claras y más oscuras), así que tiene el umbral más bajo de c1
-      (78) y deja pasar el 100 % de la lámina. Por eso pinta el 30 % de la imagen.</li>
-  <li><strong>Vegetación (c4):</strong> mezcla árboles con luz y con sombra, umbral 69: el <strong>98 % del techo de concreto</strong> pasa como vegetación.
-      En el mapa final lo salva que el concreto se parece más a su propio promedio (gana el más parecido), pero su precisión cae a 0,56.</li>
-</ul>
+<h3>Muestras muy variadas, umbral bajo</h3>
+<p>El umbral es la similitud de la peor muestra limpia. Si las muestras de un material son muy distintas entre sí, el umbral baja y entran otros materiales.
+La teja de cartagena1 tiene el umbral más bajo de esa imagen (78) y pinta el 30 % de ella. La vegetación de cartagena4 (umbral 69) acepta el 98 % del techo
+de concreto, y por eso su precisión cae a 0,56.</p>
 
-<h3>3 · Lo que no se marcó se lo queda el material más parecido</h3>
-<p>El método solo conoce los materiales que se marcaron. Un píxel de algo que nadie marcó (tierra, contenedores, tanques) se pinta con el
-material más parecido si pasa su umbral.</p>
-<figure><img src="img/fig_sin_muestra.png" alt="Zonas sin muestra propia y qué material se las queda">
-<figcaption>Zonas sin muestra propia (tomadas de <code>recuadros/</code>) y el material que se las queda. Por ejemplo, el 64 % de los contenedores
-de cartagena4 pasa como asfalto y el 63 % del suelo claro de cartagena3 como vegetación.</figcaption></figure>
+<h3>Lo que no se marcó se lo queda otro material</h3>
+<p>El método solo conoce los materiales que marcamos. Lo demás se pinta con el material más parecido: en cartagena4 el 64 % de los contenedores pasa como
+asfalto, y en cartagena3 el 63 % del suelo claro pasa como vegetación.</p>
 
-<h3>4 · Huecos en el agua: olas y brillo del sol</h3>
-<p>Al limpiar las muestras el umbral del agua sube (en el río, de 20 a 73). Así deja de pintarse la tierra, pero algunos píxeles de agua de verdad
-con olas, espuma o reflejos quedan por debajo y salen como puntitos sin pintar. Es el precio de no pintar la tierra: el recall baja de 1,00 a
-0,92–0,98, mientras la precisión sube.</p>
+<h3>Huecos en el agua</h3>
+<p>Al limpiar las muestras el umbral del agua sube (en el río, de 20 % a 73 %), y así deja de pintarse la tierra. Pero algunos píxeles de agua con olas o
+reflejos quedan por debajo y se ven como puntos sin pintar: la sensibilidad baja de 1,00 a entre 0,92 y 0,98 mientras la precisión sube.</p>
+<p>Una mejora posible sería usar el brillo como tercer número junto a las 2 longitudes de arco.</p>
 
-<h3>5 · Métricas que se ven mejor de lo que son</h3>
-<ul>
-  <li>Cada material se compara <strong>solo contra los materiales marcados en su imagen</strong>: un 1,00 en cartagena3 significa “se distingue
-      del asfalto”, no “se distingue de todo”.</li>
-  <li>Con pocas muestras la prueba es pequeña: el asfalto de cartagena1 se prueba con solo 21 píxeles.</li>
-</ul>
-
-<div class="caja idea"><span class="t">Cómo se podría mejorar</span>
-<ul style="margin:0">
-  <li><strong>Agregar el brillo</strong> como tercer número junto a las 2 longitudes de arco: separaría lámina, teja y vegetación, y agua de asfalto.</li>
-  <li><strong>Marcar los materiales que faltan</strong> (tierra, contenedores, tanques, asbesto) para que no se los quede otro.</li>
-  <li><strong>Separar materiales muy variados</strong> en dos (por ejemplo, vegetación al sol y a la sombra) para que su umbral no baje tanto.</li>
-</ul></div>
-
-<div class="pie">Todos los números y figuras salen de los datos reales del proyecto (cartagena1, 3 y 4).
-Figuras: <code>herramientas/generar_figuras.py</code>.</div>
+<div class="pie">Los números y las figuras salen de los datos del proyecto (cartagena1, 3 y 4) con herramientas/analizar_confusiones.py y herramientas/generar_figuras.py.</div>
 </body>
 </html>

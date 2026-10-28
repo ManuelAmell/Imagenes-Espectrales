@@ -1,6 +1,5 @@
 *.img
 *.zip
-respaldo/
 .venv/
 .ipynb_checkpoints/
 __pycache__/
@@ -8,4 +7,5 @@ video/.hyperframes/
 video/.thumbnails/
 video/renders/
 node_modules/
-.commandcode/
+docs/work-*/
+docs/.video_*/
